@@ -1,0 +1,68 @@
+esphome:
+  name: light
+  platform: ESP8266
+  board: esp01_1m
+  
+  includes:
+  - lib/EspRC.h
+  - lib/my_light.h
+
+wifi:
+  networks:
+  
+output:
+- platform: esp8266_pwm
+  pin: 2
+  id: my_output
+  inverted: true
+
+light:
+  - platform: fastled_clockless
+    chipset: WS2812B
+    pin: RX
+    num_leds: 16
+    rgb_order: BRG
+    id: light_1
+    effects:
+      - addressable_rainbow:
+          name: "Addressable 1 (Rainbow)"
+          speed: 5
+      - addressable_color_wipe:
+          name: "Addressable 2 (Color Wipe)"
+          add_led_interval: 300ms
+
+custom_component:
+- lambda: |-
+    EspRC.begin(2);
+    
+    EspRC.on("my_light", []() {
+      float red, green, blue, brightness;
+      
+      String values = EspRC.getValue();
+      
+      int pos;
+    	pos = values.indexOf(';');
+    	red = values.substring(0, pos).toFloat();
+    	values.remove(0, pos+1);
+    	
+    	pos = values.indexOf(';');
+    	green = values.substring(0, pos).toFloat();
+    	values.remove(0, pos+1);
+    	
+    	pos = values.indexOf(';');
+    	blue = values.substring(0, pos).toFloat();
+    	values.remove(0, pos+1);
+    	
+    	pos = values.indexOf(';');
+    	brightness = values.substring(0, pos).toFloat();
+    	values.remove(0, pos+1);
+    	
+    	pos = values.indexOf(';');
+  
+      auto call = id(light_1).turn_on();
+      call.set_rgb(red, green, blue);
+      call.set_brightness(brightness); 
+      call.set_effect(values.substring(0, pos).c_str());
+      call.perform();
+    });
+    return {};

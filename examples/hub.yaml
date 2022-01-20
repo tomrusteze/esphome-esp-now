@@ -1,0 +1,70 @@
+substitutions:
+  devicename: hub
+  comment: ""
+
+esphome:
+  name: $devicename
+  comment: $comment
+  platform: ESP8266
+  board: d1_mini
+  includes:
+  - lib/EspRC.h
+  - lib/my_light.h
+
+wifi:
+  networks:
+  reboot_timeout: 300s
+
+web_server:
+
+logger:
+
+
+api:
+  services:
+    - service: restart_node
+      then:
+        - switch.turn_on: restartswitch
+
+ota:
+  password: $devicename !secret otapass
+
+switch:
+  - platform: restart
+    id: restartswitch
+
+light:
+- platform: custom
+  lambda: |-
+    auto light_out = new MyCustomLightOutput();
+    App.register_component(light_out);
+    return {light_out};
+  lights:
+    - name: "Custom Light 1"
+      effects:
+      - automation:
+          name: "Addressable 1 (Rainbow)"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Addressable 2 (Color Wipe)"
+          sequence:
+            lambda: ;
+
+sensor:
+  - platform: wifi_signal
+    name: ${devicename} WiFi Signal Sensor
+    unit_of_measurement: "%"
+    filters:
+    - lambda: |-
+        if(x <= -100){
+          return  0;
+        } else if (x >= -50) {
+          return 100;
+        } else {
+          return 2 * (x + 100);
+        }
+        
+custom_component:
+- lambda: |-
+    return {};
