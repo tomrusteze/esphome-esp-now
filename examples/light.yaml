@@ -2,26 +2,18 @@ esphome:
   name: light
   platform: ESP8266
   board: esp01_1m
-  
   includes:
   - lib/EspRC.h
   - lib/my_light.h
-
-wifi:
-  networks:
-  
-output:
-- platform: esp8266_pwm
-  pin: 2
-  id: my_output
-  inverted: true
+  libraries:
+  - ESP8266WiFi
 
 light:
   - platform: fastled_clockless
     chipset: WS2812B
     pin: RX
-    num_leds: 16
-    rgb_order: BRG
+    num_leds: 64
+    rgb_order: GRB
     id: light_1
     effects:
       - addressable_rainbow:
@@ -30,6 +22,63 @@ light:
       - addressable_color_wipe:
           name: "Addressable 2 (Color Wipe)"
           add_led_interval: 300ms
+      - addressable_scan:
+          name: "Addressable 3 (Scan)"
+          move_interval: 50ms
+      - addressable_twinkle:
+          name: "Addressable 4 (Twinkle)"
+          progress_interval: 20ms
+          twinkle_probability: 3%
+      - addressable_random_twinkle:
+          name: "Addressable 5 (Random Twinkle)"
+          progress_interval: 50ms
+          twinkle_probability: 20%
+      - addressable_fireworks:
+          name: "Addressable 6 (Fireworks)"
+          fade_out_rate: 160
+      - addressable_fireworks:
+          name: "Addressable 7 (Random Fireworks)"
+          use_random_color: true
+          spark_probability: 15%
+      - random: 
+          name: "Fade"
+          transition_length: 3s
+          update_interval: 10s
+      - strobe:
+          name: "Strobe"
+          colors:
+            - state: true
+              duration: 150ms
+            - state: false
+              duration: 150ms
+      - strobe:
+          name: "Strobe (RGB)"
+          colors:
+            - state: true
+              red: 100%
+              green: 0%
+              blue: 0%
+              duration: 100ms
+            - state: true
+              red: 0%
+              green: 100%
+              blue: 0%
+              duration: 100ms
+            - state: true
+              red: 0%
+              green: 0%
+              blue: 100%
+              duration: 100ms
+            - state: false
+              duration: 100ms
+
+wifi:
+  ap:
+    ssid: light_ball
+    password: !secret wifipassliot
+    channel: 7
+
+#logger:
 
 custom_component:
 - lambda: |-
