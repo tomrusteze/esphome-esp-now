@@ -9,16 +9,13 @@ esphome:
   board: d1_mini
   includes:
   - lib/EspRC.h
-  - lib/my_light.h
+  - lib/esp_now_light.h
 
 wifi:
   networks:
   reboot_timeout: 300s
 
-web_server:
-
 logger:
-
 
 api:
   services:
@@ -36,7 +33,7 @@ switch:
 light:
 - platform: custom
   lambda: |-
-    auto light_out = new MyCustomLightOutput();
+    auto light_out = new esp_now_light("ball_1");
     App.register_component(light_out);
     return {light_out};
   lights:
@@ -48,6 +45,38 @@ light:
             lambda: ;
       - automation:
           name: "Addressable 2 (Color Wipe)"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Addressable 3 (Scan)"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Addressable 4 (Twinkle)"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Addressable 5 (Random Twinkle)"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Addressable 6 (Fireworks)"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Addressable 7 (Random Fireworks)"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Fade"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Strobe"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Strobe (RGB)"
           sequence:
             lambda: ;
 
@@ -64,7 +93,3 @@ sensor:
         } else {
           return 2 * (x + 100);
         }
-        
-custom_component:
-- lambda: |-
-    return {};

@@ -1,13 +1,17 @@
 #include "esphome.h"
 #include "EspRC.h"
 
-class MyCustomLightOutput : public Component, public LightOutput {
+class esp_now_light : public Component, public LightOutput {
  private:
   std::string command = "";
-  
- public:
+  String name;
   bool updated = false;
   
+ public:
+  esp_now_light(String name){
+    this->name = name;
+  }
+    
   void setup() override {
     EspRC.begin(2);    
   }
@@ -35,7 +39,7 @@ class MyCustomLightOutput : public Component, public LightOutput {
     // Write red, green and blue to HW
     if(command != newCommand)
     {
-      EspRC.send("my_light", newCommand);
+      EspRC.send(name, newCommand);
       command = newCommand;
     }
   }

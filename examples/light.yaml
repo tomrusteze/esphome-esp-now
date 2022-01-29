@@ -1,10 +1,13 @@
+substitutions:
+  devicename: ball_1
+
 esphome:
   name: light
   platform: ESP8266
   board: esp01_1m
   includes:
   - lib/EspRC.h
-  - lib/my_light.h
+  - lib/esp_now_light.h
   libraries:
   - ESP8266WiFi
 
@@ -12,7 +15,7 @@ light:
   - platform: fastled_clockless
     chipset: WS2812B
     pin: RX
-    num_leds: 64
+    num_leds: 16
     rgb_order: GRB
     id: light_1
     effects:
@@ -84,7 +87,7 @@ custom_component:
 - lambda: |-
     EspRC.begin(2);
     
-    EspRC.on("my_light", []() {
+    EspRC.on("${devicename}", []() {
       float red, green, blue, brightness;
       
       String values = EspRC.getValue();
