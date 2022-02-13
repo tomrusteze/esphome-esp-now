@@ -8,8 +8,8 @@ esphome:
   platform: ESP8266
   board: d1_mini
   includes:
-  - lib/EspRC.h
-  - lib/esp_now_light.h
+  - lib/MeshRC.h
+  - lib/esp_now_light_mesh.h
 
 wifi:
   networks:
@@ -26,6 +26,8 @@ api:
 ota:
   password: $devicename !secret otapass
 
+web_server:
+
 switch:
   - platform: restart
     id: restartswitch
@@ -40,7 +42,89 @@ light:
     return {light_out_1, light_out_2};
   lights:
     - name: "Custom Light 1"
+      effects:
+      - automation:
+          name: "Addressable 1 (Rainbow)"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Addressable 2 (Color Wipe)"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Addressable 3 (Scan)"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Addressable 4 (Twinkle)"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Addressable 5 (Random Twinkle)"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Addressable 6 (Fireworks)"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Addressable 7 (Random Fireworks)"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Fade"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Strobe"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Strobe (RGB)"
+          sequence:
+            lambda: ;
     - name: "Custom Light 2"
+      effects:
+      - automation:
+          name: "Addressable 1 (Rainbow)"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Addressable 2 (Color Wipe)"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Addressable 3 (Scan)"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Addressable 4 (Twinkle)"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Addressable 5 (Random Twinkle)"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Addressable 6 (Fireworks)"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Addressable 7 (Random Fireworks)"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Fade"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Strobe"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Strobe (RGB)"
+          sequence:
+            lambda: ;
 
 sensor:
   - platform: wifi_signal

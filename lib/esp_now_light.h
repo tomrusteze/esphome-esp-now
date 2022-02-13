@@ -1,5 +1,5 @@
 #include "esphome.h"
-#include "EspRC.h"
+#include "MeshRC.h"
 
 class esp_now_light : public Component, public LightOutput {
  private:
@@ -13,7 +13,7 @@ class esp_now_light : public Component, public LightOutput {
   }
     
   void setup() override {
-    EspRC.begin(2);    
+    MeshRC::begin();    
   }
 
   std::string toFormat(float red, float green, float blue, float brightness, std::string effect, char delimiter)
@@ -39,7 +39,7 @@ class esp_now_light : public Component, public LightOutput {
     // Write red, green and blue to HW
     if(command != newCommand)
     {
-      EspRC.send(name, newCommand);
+      MeshRC::send(name, newCommand);
       command = newCommand;
     }
   }

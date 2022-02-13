@@ -6,7 +6,7 @@ esphome:
   platform: ESP8266
   board: esp01_1m
   includes:
-  - lib/EspRC.h
+  - lib/MeshRC.h
   - lib/esp_now_light.h
   libraries:
   - ESP8266WiFi
@@ -80,17 +80,35 @@ wifi:
     ssid: light_ball
     password: !secret wifipassliot
     channel: 7
+    id: wifiap
 
-#logger:
+ota: 
+
+logger:
 
 custom_component:
 - lambda: |-
-    EspRC.begin(2);
+    MeshRC::begin();
     
-    EspRC.on("${devicename}", []() {
+    ESP_LOGD("custom", "Initialising MeshRC");
+    
+    MeshRC::on("", [](u8* data, u8 size) {
+    if (size > 6 && MeshRC::equals(data, (u8*)get_mac_address().c_str(), 6) && (data[6] == '>')) {
+        u8* newData = &data[5];
+        newData[0] = '#';
+        MeshRC::recvHandler(MeshRC::sender, newData, size - 5);
+        MeshRC::send("#<OK");
+      }
+    });
+    
+    MeshRC::on("${devicename}", [](u8* data, u8 size) {
       float red, green, blue, brightness;
       
-      String values = EspRC.getValue();
+      ESP_LOGD("custom", "Receiving Light command");
+      
+      String values = "";
+      for (auto i=0; i<size; i++) 
+        values.concat((const char)data[i]);
       
       int pos;
     	pos = values.indexOf(';');
