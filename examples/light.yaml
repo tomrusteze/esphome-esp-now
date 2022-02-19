@@ -93,15 +93,20 @@ custom_component:
     ESP_LOGD("custom", "Initialising MeshRC");
     
     MeshRC::on("", [](u8* data, u8 size) {
-    if (size > 6 && MeshRC::equals(data, (u8*)get_mac_address().c_str(), 6) && (data[6] == '>')) {
-        u8* newData = &data[5];
-        newData[0] = '#';
-        MeshRC::recvHandler(MeshRC::sender, newData, size - 5);
-        MeshRC::send("#<OK");
+      // Process an incomming message, if it is directed to us, then we handle it.
+      ESP_LOGD("custom", "Receiving any MeshRC message");
+      u8 dest[6];
+      get_mac_address_raw(dest);
+      if (size > 6 && MeshRC::equals(data, dest, 6) && (data[6] == '>')) {
+          u8* newData = &data[5];
+          ESP_LOGD("custom", "Receiving meshRC message");
+          newData[0] = '#';
+          MeshRC::recvHandler(MeshRC::sender, newData, size - 5);
+          // MeshRC::send("#<OK");
       }
     });
     
-    MeshRC::on("${devicename}", [](u8* data, u8 size) {
+    MeshRC::on("#>SET", [](u8* data, u8 size) {
       float red, green, blue, brightness;
       
       ESP_LOGD("custom", "Receiving Light command");

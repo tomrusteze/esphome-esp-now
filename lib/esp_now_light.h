@@ -6,10 +6,11 @@ class esp_now_light : public Component, public LightOutput {
   std::string command = "";
   String name;
   bool updated = false;
+  u8 dest[6];
   
  public:
-  esp_now_light(String name){
-    this->name = name;
+  esp_now_light(u8 *mac_address){
+    memcpy(dest, mac_address,6);
   }
     
   void setup() override {
@@ -18,7 +19,7 @@ class esp_now_light : public Component, public LightOutput {
 
   std::string toFormat(float red, float green, float blue, float brightness, std::string effect, char delimiter)
   {
-		return to_string(red).substr(0,4) + delimiter + to_string(green).substr(0,4) + delimiter + to_string(blue).substr(0,4) + delimiter + to_string(brightness).substr(0,4) + delimiter + effect;
+		return ">SET" + to_string(red).substr(0,4) + delimiter + to_string(green).substr(0,4) + delimiter + to_string(blue).substr(0,4) + delimiter + to_string(brightness).substr(0,4) + delimiter + effect;
   }
   
   LightTraits get_traits() override {
@@ -39,7 +40,7 @@ class esp_now_light : public Component, public LightOutput {
     // Write red, green and blue to HW
     if(command != newCommand)
     {
-      MeshRC::send(name, newCommand);
+      MeshRC::send(dest, 6, newCommand);
       command = newCommand;
     }
   }

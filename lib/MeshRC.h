@@ -22,7 +22,8 @@ u8 broadcast[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 u8 events_num = 0;
 u32 received;
 u32 ignored;
-u8 *sender = NULL;
+u8 dest[6] = {0x40,0x91,0x51,0x50,0x4a,0x88};
+u8 *sender;
 u32 sendTime;
 u16 duration;
 u8 *master = NULL;
@@ -46,10 +47,19 @@ void send(String data) {
 void send(String data, std::string value) {
 	send(String(data + value.c_str()));
 }
+void send(u8 *data, u8 size, String type) {
+	memcpy(&buffer[0], data, size);
+	memcpy(&buffer[size], (u8 *)type.c_str(), type.length());
+	send(buffer, type.length() + size);
+}
 void send(String type, u8 *data, u8 size) {
 	memcpy(&buffer[0], (u8 *)type.c_str(), type.length());
 	memcpy(&buffer[type.length()], data, size);
 	send(buffer, type.length() + size);
+}
+void send(u8 *data, u8 size, std::string value) {
+	String type = String(value.c_str());
+	send(data,size,type);
 }
 void getValue(String d) {
 		d = "";
