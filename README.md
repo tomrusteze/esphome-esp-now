@@ -9,8 +9,7 @@ The purpose of this software is to enable communication between esp devices with
 
 ## Improvements
 - As of now, because of the esphome standard. The nodes still need some sort of WiFi connection. In this case, a light creates a simple access point. Important is that all nodes should *do their WiFi stuff* on the same channel. In the future, the light should not need to connect to WiFi at all.
-- Currently ESP32 is not supported. 
-- Add support for different transition length.
+- Add extra functionality, such as different transtion length and multiple lights per node.
 - Add some return channel for the light to show that they are online. In this way, the Hub can relay this information to HomeAssistant.
 
 ## Goal
