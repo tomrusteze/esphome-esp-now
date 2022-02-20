@@ -1,18 +1,26 @@
 #include "esphome.h"
-#include "MeshRC.h"
+#ifdef USE_ESP32
+#include "MeshRC_32.h"
+#endif
+#ifdef USE_ESP8266
+#include "MeshRC_8266.h"
+#endif
 
 class esp_now_light : public Component, public LightOutput {
  private:
   std::string command = "";
   String name;
   bool updated = false;
-  u8 dest[6];
+  uint8_t dest[6];
   
  public:
-  esp_now_light(u8 *mac_address){
+  esp_now_light(uint8_t *mac_address){
     memcpy(dest, mac_address,6);
   }
-    
+
+  // Setup ESP-NOW must be done after Wi-Fi
+  float get_setup_priority() const override { return esphome::setup_priority::AFTER_WIFI; }
+
   void setup() override {
     MeshRC::begin();    
   }
