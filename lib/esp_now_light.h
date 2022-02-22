@@ -1,10 +1,5 @@
 #include "esphome.h"
-#ifdef USE_ESP32
-#include "MeshRC_32.h"
-#endif
-#ifdef USE_ESP8266
-#include "MeshRC_8266.h"
-#endif
+#include "MeshRC.h"
 
 class esp_now_light : public Component, public LightOutput {
  private:

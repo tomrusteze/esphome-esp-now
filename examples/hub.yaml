@@ -8,7 +8,7 @@ esphome:
   platform: ESP8266
   board: d1_mini
   includes:
-  - lib/MeshRC_8266.h
+  - lib/MeshRC.h
   - lib/esp_now_light.h
 
 wifi:

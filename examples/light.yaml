@@ -6,7 +6,7 @@ esphome:
   platform: ESP8266
   board: esp01_1m
   includes:
-  - lib/MeshRC_8266.h
+  - lib/MeshRC.h
   - lib/esp_now_light.h
 
 light:
