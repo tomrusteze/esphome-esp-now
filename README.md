@@ -6,9 +6,9 @@ The purpose of this software is to enable communication between esp devices with
 ## Features
 - Using a node running esphome you can control a light on a different node also running esphome with the communcation using esp-now. Changing colour, effects and brightness are supported. As of Jan 29, multiple lights are supported. Differentiation between lights is done using the MAC address.
 - Since Feb 20 support for the ESP32 microcontroller is added.
+- Nodes can either use their WiFi connection provided by esphome(Connecting to an Access Point or Setting up an Access point. See the [documentation](https://esphome.io/components/wifi.html)) or no Wi-Fi connection at all, which is in the ```light.yaml``` example. This must be initialized by ```MeshRC::setupwifi(${wifichannel});```, where ```${wifichannel}``` should be configured such that it uses the same channel as the hub(, this is a [substitution](https://esphome.io/guides/configuration-types.html?#substitutions)). So the hub should always connect to the same access point, this can be configured [here](https://esphome.io/components/wifi.html#connecting-to-multiple-networks).
 
 ## Improvements
-- As of now, because of the esphome standard. The nodes still need some sort of WiFi connection. In this case, a light creates a simple access point. Important is that all nodes should *do their WiFi stuff* on the same channel. In the future, the light should not need to connect to WiFi at all.
 - Add extra functionality, such as different transtion length and multiple lights per node.
 - Add some return channel for the light to show that they are online. In this way, the Hub can relay this information to HomeAssistant.
 

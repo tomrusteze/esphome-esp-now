@@ -11,6 +11,7 @@
 #endif
 #ifdef USE_ESP8266
 #include <espnow.h>
+#include <ESP8266WiFi.h>
 #endif
 
 
@@ -41,14 +42,14 @@ uint16_t duration;
 uint8_t *master = NULL;
 bool sending;
 uint8_t psk[] = {'1','2','3','4','5','6','7','8','9','0','a','b','c','d','e','f'};
-/*
-void setMaster(uint8_t *addr) {
-	if (esp_now_is_peer_exist(master))
-		esp_now_del_peer(master);
-	master = addr;
-	esp_now_add_peer(master, ESP_NOW_ROLE_COMBO, 1, psk, sizeof(psk));
+
+void setupwifi(int channel){
+	// Use this function when you want the node to only communicate over esp-now.
+	WiFi.mode(WIFI_AP_STA);
+    WiFi.softAP("temp", "temppass", channel, true, 0);
+    WiFi.mode(WIFI_STA);
+    WiFi.channel(channel);
 }
-*/
 void send(uint8_t *data, uint8_t size) {
 	sending = true;
 	sendTime = micros();
@@ -144,6 +145,12 @@ void begin() {
 }
 #endif
 #ifdef USE_ESP8266
+void setMaster(uint8_t *addr) {
+	if (esp_now_is_peer_exist(master))
+		esp_now_del_peer(master);
+	master = addr;
+	esp_now_add_peer(master, ESP_NOW_ROLE_COMBO, 1, psk, sizeof(psk));
+}
 esp_now_send_cb_t sendHandler = [](uint8_t *addr, uint8_t err) {
 	sending = false;
 	duration = micros() - sendTime;

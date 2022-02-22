@@ -1,5 +1,6 @@
 substitutions:
   devicename: ball_1
+  wifichannel: "7"
 
 esphome:
   name: light
@@ -8,6 +9,8 @@ esphome:
   includes:
   - lib/MeshRC.h
   - lib/esp_now_light.h
+  libraries:
+  - ESP8266WiFi
 
 light:
   - platform: fastled_clockless
@@ -73,22 +76,14 @@ light:
             - state: false
               duration: 100ms
 
-wifi:
-  ap:
-    ssid: light_ball
-    password: !secret wifipassliot
-    channel: 7
-    id: wifiap
-
-ota: 
-
 logger:
-
 
 custom_component:
 - lambda: |-
-    MeshRC::begin();
+    MeshRC::setupwifi(${wifichannel});
     
+    MeshRC::begin();
+
     ESP_LOGD("custom", "Initialising MeshRC");
     
     MeshRC::on("", [](uint8_t* data, uint8_t size) {
