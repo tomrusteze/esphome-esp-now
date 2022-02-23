@@ -1,15 +1,8 @@
 # ESP Now integration for ESPhome
 First of all, this is based on a similar integration by [iphong](https://github.com/iphong/esphome-espnow), which is now updated to [MeshRC](https://github.com/iphong/lib-esp-rc). 
 ## Purpose
-<<<<<<< HEAD
 The purpose of this software is to enable communication between esp devices without a wifi connection. In the example the light acts as a slave and the hub controls the light. I have tried to make the communication as lightweight as possible and similar to service calls in HomeAssistant. The idea is explained in this diagram 
 ![Communication diagram](./img/Dataflow_example.svg)
-=======
-The purpose of this software is to enable communication between esp devices without a wifi connection. In the example the light acts as a slave and the hub controls the light. I have tried to make the communication as lightweight as possible and similar to service calls in HomeAssistant. The idea is explained in this diagram, where all nodes run esphome: 
-<p align="center">
-  <img src="./Dataflow_example.svg" />
-</p>
->>>>>>> 8ce84f4cb364ae2350ddd533f4fed9ca70d56743
 
 ## Features
 - Using a node running esphome you can control a light on a different node also running esphome with the communcation using esp-now. Changing colour, effects and brightness are supported. As of Jan 29, multiple lights are supported. Differentiation between lights is done using the MAC address.
