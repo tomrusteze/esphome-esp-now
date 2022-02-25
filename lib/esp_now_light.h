@@ -6,10 +6,12 @@ class esp_now_light : public Component, public LightOutput {
   std::string command = "";
   bool updated = false;
   uint8_t dest[6];
+  int number;
   
  public:
-  esp_now_light(uint8_t *mac_address){
+  esp_now_light(uint8_t *mac_address, int number){
     memcpy(dest, mac_address,6);
+    this->number = number;
   }
 
   // Setup ESP-NOW must be done after Wi-Fi
@@ -28,7 +30,8 @@ class esp_now_light : public Component, public LightOutput {
 	
   std::string toFormat(float red, float green, float blue, float brightness, uint32_t transition, std::string effect, char delimiter)
   {
-		return ">SETLIGHT1" + to_string(red).substr(0,4) + delimiter + to_string(green).substr(0,4) + delimiter + to_string(blue).substr(0,4) + delimiter + to_string(brightness).substr(0,4) + delimiter + to_string(transition).substr(0,4) + delimiter + effect;
+		return ">SETLIGHT" + to_string(number).substr(0,1) + to_string(red).substr(0,4) + delimiter + to_string(green).substr(0,4) + delimiter + to_string(blue).substr(0,4)
+               + delimiter + to_string(brightness).substr(0,4) + delimiter + to_string(transition).substr(0,4) + delimiter + effect;
   }
 
   void write_state(LightState *state) override {
