@@ -22,7 +22,7 @@ class esp_now_light : public Component, public LightOutput {
 
   std::string toFormat(float red, float green, float blue, float brightness, std::string effect, char delimiter)
   {
-		return ">SET" + to_string(red).substr(0,4) + delimiter + to_string(green).substr(0,4) + delimiter + to_string(blue).substr(0,4) + delimiter + to_string(brightness).substr(0,4) + delimiter + effect;
+		return ">SETLIGHT1" + to_string(red).substr(0,4) + delimiter + to_string(green).substr(0,4) + delimiter + to_string(blue).substr(0,4) + delimiter + to_string(brightness).substr(0,4) + delimiter + effect;
   }
   
   LightTraits get_traits() override {
@@ -37,6 +37,7 @@ class esp_now_light : public Component, public LightOutput {
     float red, green, blue, brightness;
     // use any of the provided current_values methods
     //state->current_values_as_rgb(&red, &green, &blue);
+    
     state->remote_values.as_rgb(&red, &green, &blue);
     state->remote_values.as_brightness(&brightness);
     std::string newCommand = toFormat(red, green, blue, brightness, state->get_effect_name(),';');
@@ -48,3 +49,42 @@ class esp_now_light : public Component, public LightOutput {
     }
   }
 };
+
+float parseFloat(String &data, char delimiter)
+{
+  int pos = data.indexOf(';');
+  float value = data.substring(0, pos).toFloat();
+  data.remove(0, pos+1);
+  return value;
+}
+
+String parseString(String &data, char delimiter)
+{
+  int pos = data.indexOf(';');
+  String value = data.substring(0, pos);
+  data.remove(0, pos+1);
+  return value;
+}
+
+void parseLightRGB(uint8_t* data, uint8_t size, AddressableLightState* dest)
+{
+  ESP_LOGD("custom", "Receiving Light command");
+  
+  String values = "";
+  for (auto i=0; i<size; i++) 
+    values.concat((const char)data[i]);
+
+  float red = parseFloat(values, ';');
+  float green = parseFloat(values, ';');
+  float blue = parseFloat(values, ';');
+  float brightness = parseFloat(values, ';');
+  String effect = parseString(values, ';');
+
+  auto call = dest->turn_on();
+  call.set_rgb(red, green, blue);
+  call.set_brightness(brightness); 
+  call.set_effect(effect.c_str());
+  call.perform();
+}
+
+

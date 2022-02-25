@@ -100,38 +100,8 @@ custom_component:
       }
     });
     
-    MeshRC::on("#>SET", [](uint8_t* data, uint8_t size) {
-      float red, green, blue, brightness;
-      
-      ESP_LOGD("custom", "Receiving Light command");
-      
-      String values = "";
-      for (auto i=0; i<size; i++) 
-        values.concat((const char)data[i]);
-      
-      int pos;
-    	pos = values.indexOf(';');
-    	red = values.substring(0, pos).toFloat();
-    	values.remove(0, pos+1);
-    	
-    	pos = values.indexOf(';');
-    	green = values.substring(0, pos).toFloat();
-    	values.remove(0, pos+1);
-    	
-    	pos = values.indexOf(';');
-    	blue = values.substring(0, pos).toFloat();
-    	values.remove(0, pos+1);
-    	
-    	pos = values.indexOf(';');
-    	brightness = values.substring(0, pos).toFloat();
-    	values.remove(0, pos+1);
-    	
-    	pos = values.indexOf(';');
-  
-      auto call = id(light_1).turn_on();
-      call.set_rgb(red, green, blue);
-      call.set_brightness(brightness); 
-      call.set_effect(values.substring(0, pos).c_str());
-      call.perform();
+    MeshRC::on("#>SETLIGHT1", [](uint8_t* data, uint8_t size) {
+      AddressableLightState* dest = id(light_1);
+      parseLightRGB(data, size, dest);
     });
     return {};
