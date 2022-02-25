@@ -4,7 +4,6 @@
 class esp_now_light : public Component, public LightOutput {
  private:
   std::string command = "";
-  String name;
   bool updated = false;
   uint8_t dest[6];
   
@@ -19,11 +18,6 @@ class esp_now_light : public Component, public LightOutput {
   void setup() override {
     MeshRC::begin();    
   }
-
-  std::string toFormat(float red, float green, float blue, float brightness, std::string effect, char delimiter)
-  {
-		return ">SETLIGHT1" + to_string(red).substr(0,4) + delimiter + to_string(green).substr(0,4) + delimiter + to_string(blue).substr(0,4) + delimiter + to_string(brightness).substr(0,4) + delimiter + effect;
-  }
   
   LightTraits get_traits() override {
     // return the traits this light supports
@@ -32,15 +26,21 @@ class esp_now_light : public Component, public LightOutput {
     return traits;
   }
 	
+  std::string toFormat(float red, float green, float blue, float brightness, uint32_t transition, std::string effect, char delimiter)
+  {
+		return ">SETLIGHT1" + to_string(red).substr(0,4) + delimiter + to_string(green).substr(0,4) + delimiter + to_string(blue).substr(0,4) + delimiter + to_string(brightness).substr(0,4) + delimiter + to_string(transition).substr(0,4) + delimiter + effect;
+  }
+
   void write_state(LightState *state) override {
     // This will be called by the light to get a new state to be written.
     float red, green, blue, brightness;
+    uint32_t transition = state->get_default_transition_length();
     // use any of the provided current_values methods
     //state->current_values_as_rgb(&red, &green, &blue);
     
     state->remote_values.as_rgb(&red, &green, &blue);
     state->remote_values.as_brightness(&brightness);
-    std::string newCommand = toFormat(red, green, blue, brightness, state->get_effect_name(),';');
+    std::string newCommand = toFormat(red, green, blue, brightness, transition, state->get_effect_name(),';');
     // Write red, green and blue to HW
     if(command != newCommand)
     {
@@ -54,6 +54,14 @@ float parseFloat(String &data, char delimiter)
 {
   int pos = data.indexOf(';');
   float value = data.substring(0, pos).toFloat();
+  data.remove(0, pos+1);
+  return value;
+}
+
+int parseInt(String &data, char delimiter)
+{
+  int pos = data.indexOf(';');
+  int value = data.substring(0, pos).toInt();
   data.remove(0, pos+1);
   return value;
 }
@@ -78,11 +86,13 @@ void parseLightRGB(uint8_t* data, uint8_t size, AddressableLightState* dest)
   float green = parseFloat(values, ';');
   float blue = parseFloat(values, ';');
   float brightness = parseFloat(values, ';');
+  float transition = parseFloat(values, ';');
   String effect = parseString(values, ';');
 
   auto call = dest->turn_on();
   call.set_rgb(red, green, blue);
-  call.set_brightness(brightness); 
+  call.set_brightness(brightness);
+  call.set_transition_length(transition); 
   call.set_effect(effect.c_str());
   call.perform();
 }
