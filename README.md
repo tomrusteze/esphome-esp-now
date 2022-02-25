@@ -6,10 +6,10 @@ The purpose of this software is to enable communication between esp devices with
 
 ## Features
 - Using a node running esphome you can control a light on a different node also running esphome with the communcation using esp-now. Changing colour, effects and brightness are supported. As of Jan 29, multiple lights are supported. Differentiation between lights is done using the MAC address.
-- Since Feb 20 support for the ESP32 microcontroller is added.
+- Since Feb 20 support for the ESP32 microcontroller is added for the Hub.
 - The configured transition length in the hub will be transmitted to the nodes.
 - Each node can run multiple lights.
-- Nodes can either use their WiFi connection provided by esphome(Connecting to an Access Point or Setting up an Access point. See the [documentation](https://esphome.io/components/wifi.html)) or no Wi-Fi connection at all, which is in the ```light.yaml``` example. This must be initialized by ```MeshRC::setupwifi(${wifichannel});```, where ```${wifichannel}``` should be configured such that it uses the same channel as the hub(, this is a [substitution](https://esphome.io/guides/configuration-types.html?#substitutions)). So the hub should always connect to the same access point, this can be configured [here](https://esphome.io/components/wifi.html#connecting-to-multiple-networks).
+- Nodes can either use their WiFi connection provided by esphome(Connecting to an Access Point or Setting up an Access point. See the [documentation](https://esphome.io/components/wifi.html)) or no Wi-Fi connection at all, which is in the ```light.yaml``` example. This must be initialized by ```MeshRC::setupwifi(${wifichannel});```.
 
 ## Improvements
 - Add some return channel for the light to show that they are online. In this way, the Hub can relay this information to HomeAssistant.
@@ -27,4 +27,15 @@ For this guide, I assume that you have esphome up and running and are familiar w
 - Put the lib folder in you esphome folder.
 - Take the two examples and put them in your esphome folder.
 - Change the data in the examples, such that they are correct for your devices
+  - First of all, you need to determine the WiFi channel of the Access Point. You can download an app such as [WiFi Analyzer](https://play.google.com/store/apps/details?id=com.farproc.wifi.analyzer&hl=nl&gl=US) to determine the WiFi channel of the hub. Then, make sure that your node always connects to this Access Point, see the esphome [documentation](https://esphome.io/components/wifi.html#connecting-to-multiple-networks).
+  - Now configure the light node to also connect to this access point using the substitution:
+```
+substitutions:
+  devicename: ball_1
+  wifichannel: "7"
+```
+  - Find the MAC address of the light node and write it in the hub where you initialize the light:
+```
+    uint8_t light_address_1[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
+```
 - Flash the two devices, try looking at the log first to see if it works.
