@@ -13,6 +13,7 @@ The purpose of this software is to enable communication between esp devices with
 
 ## Improvements
 - Add some return channel for the light to show that they are online. In this way, the Hub can relay this information to HomeAssistant.
+- Add support for a Power Supply in esphome on the Hub side.
 
 ## Goal
 I wanted to have some nice lights in my garden, they should be controlleable by HomeAssistant so that they eventually would be able to react to movement.
@@ -27,8 +28,8 @@ For this guide, I assume that you have esphome up and running and are familiar w
 - Put the lib folder in you esphome folder.
 - Take the two examples and put them in your esphome folder.
 - Change the data in the examples, such that they are correct for your devices
-  - First of all, you need to determine the WiFi channel of the Access Point. You can download an app such as [WiFi Analyzer](https://play.google.com/store/apps/details?id=com.farproc.wifi.analyzer&hl=nl&gl=US) to determine the WiFi channel of the hub. Then, make sure that your node always connects to this Access Point, see the esphome [documentation](https://esphome.io/components/wifi.html#connecting-to-multiple-networks).
-  - Now configure the light node to also connect to this access point using the substitution:
+  - First of all, you need to determine the WiFi channel of the Access Point. You can either download an app such as [WiFi Analyzer](https://play.google.com/store/apps/details?id=com.farproc.wifi.analyzer&hl=nl&gl=US) to determine the WiFi channel of the hub or look at the logs from any esphome device. These will show to what channel your node is connected. Then, make sure that your node always connects to this Access Point, see the esphome [documentation](https://esphome.io/components/wifi.html#connecting-to-multiple-networks).
+  - Now configure the light node to also connect to this WiFi channel using the substitution:
 ```
 substitutions:
   devicename: ball_1
