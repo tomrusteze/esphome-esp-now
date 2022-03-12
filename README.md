@@ -10,10 +10,10 @@ The purpose of this software is to enable communication between esp devices with
 - The configured transition length in the hub will be transmitted to the nodes.
 - Each node can run multiple lights.
 - Nodes can either use their WiFi connection provided by esphome(Connecting to an Access Point or Setting up an Access point. See the [documentation](https://esphome.io/components/wifi.html)) or no Wi-Fi connection at all, which is in the ```light.yaml``` example. This must be initialized by ```MeshRC::setupwifi(${wifichannel});```.
+- Connect the lights to a power supply. I have all my lights connected behind a relay, which turns the lights on when they must produce light. However, Initialising esp-now takes about a second, so using a power supply, we can easily send the command a little bit later to give esp-now time to initialise.
 
 ## Improvements
 - Add some return channel for the light to show that they are online. In this way, the Hub can relay this information to HomeAssistant.
-- Add support for a Power Supply in esphome on the Hub side.
 
 ## Goal
 I wanted to have some nice lights in my garden, they should be controlleable by HomeAssistant so that they eventually would be able to react to movement.

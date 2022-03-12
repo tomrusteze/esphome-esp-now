@@ -7,12 +7,19 @@ class esp_now_light : public Component, public LightOutput {
   bool updated = false;
   uint8_t dest[6];
   int number;
-  
+#ifdef USE_POWER_SUPPLY
+  power_supply::PowerSupplyRequester power_{};
+#endif  
+
  public:
   esp_now_light(uint8_t *mac_address, int number){
     memcpy(dest, mac_address,6);
     this->number = number;
   }
+
+#ifdef USE_POWER_SUPPLY
+  void set_power_supply(power_supply::PowerSupply *power_supply) { this->power_.set_parent(power_supply); }
+#endif
 
   // Setup ESP-NOW must be done after Wi-Fi
   float get_setup_priority() const override { return esphome::setup_priority::AFTER_WIFI; }
@@ -47,6 +54,9 @@ class esp_now_light : public Component, public LightOutput {
     // Write red, green and blue to HW
     if(command != newCommand)
     {
+#ifdef USE_POWER_SUPPLY
+      state->remote_values.is_on() ? this->power_.request() : this->power_.unrequest();
+#endif
       MeshRC::send(dest, 6, newCommand);
       command = newCommand;
     }
@@ -80,7 +90,7 @@ String parseString(String &data, char delimiter)
 void parseLightRGB(uint8_t* data, uint8_t size, AddressableLightState* dest)
 {
   ESP_LOGD("custom", "Receiving Light command");
-  
+
   String values = "";
   for (auto i=0; i<size; i++) 
     values.concat((const char)data[i]);
