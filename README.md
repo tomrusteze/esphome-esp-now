@@ -14,6 +14,7 @@ The purpose of this software is to enable communication between esp devices with
 
 ## Improvements
 - Add some return channel for the light to show that they are online. In this way, the Hub can relay this information to HomeAssistant.
+- Add support for more types of lights, such as monochromatic and RGWB.
 
 ## Goal
 I wanted to have some nice lights in my garden, they should be controlleable by HomeAssistant so that they eventually would be able to react to movement.
