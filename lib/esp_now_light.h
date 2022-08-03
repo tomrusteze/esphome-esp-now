@@ -13,7 +13,7 @@ class esp_now_light : public Component, public LightOutput {
     power_supply::PowerSupplyRequester power_{};
   #endif  
 
-    void send_command(std::string newCommand)
+    void send_command(std::string newCommand, LightState *state)
     {
       // Send the command over esp-now
       if(command != newCommand)
@@ -63,7 +63,7 @@ class esp_now_light : public Component, public LightOutput {
       
       // Process the light values:
       std::string newCommand = toFormat(binary, state->get_effect_name(),';');
-      send_command(newCommand);
+      send_command(newCommand, state);
     }
 };
 
@@ -93,7 +93,7 @@ class esp_now_light_RGB : public esp_now_light{
       
       // Process the light values:
       std::string newCommand = toFormat(red, green, blue, brightness, transition, state->get_effect_name(),';');
-      send_command(newCommand);
+      send_command(newCommand, state);
     } 
 };
 
@@ -121,7 +121,7 @@ class esp_now_light_Monochromatic : public esp_now_light{
       
       // Process the light values:
       std::string newCommand = toFormat(brightness, transition, state->get_effect_name(),';');
-      send_command(newCommand);
+      send_command(newCommand, state);
     } 
 };
 
