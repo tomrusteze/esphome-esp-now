@@ -97,6 +97,35 @@ class esp_now_light_RGB : public esp_now_light{
     } 
 };
 
+class esp_now_light_RGBW : public esp_now_light{
+  public:
+    esp_now_light_RGBW(uint8_t *mac_address, int number) : esp_now_light(mac_address, number){};
+ 
+    LightTraits get_traits() override {
+      // return the traits this light supports
+      auto traits = LightTraits();
+      traits.set_supported_color_modes({ColorMode::RGB_WHITE, ColorMode::BRIGHTNESS});
+      return traits;
+    }
+
+    std::string toFormat(float red, float green, float blue, float white, float brightness, uint32_t transition, std::string effect, char delimiter)
+    {
+      return ">SETLIGHT" + to_string(number).substr(0,1) + to_string(red).substr(0,4) + delimiter + to_string(green).substr(0,4) + delimiter + to_string(blue).substr(0,4) + delimiter + to_string(white).substr(0,4)
+                + delimiter + to_string(brightness).substr(0,4) + delimiter + to_string(transition).substr(0,4) + delimiter + effect;
+    }
+
+    void write_state(LightState *state) override {
+      // Get the light values:
+      float red, green, blue, white, brightness;
+      uint32_t transition = state->get_default_transition_length();
+      state->remote_values.as_rgbw(&red, &green, &blue, &white);
+      brightness = state->remote_values.get_color_brightness();
+      // Process the light values:
+      std::string newCommand = toFormat(red, green, blue, white, brightness, transition, state->get_effect_name(),';');
+      send_command(newCommand, state);
+    } 
+};
+
 class esp_now_light_Monochromatic : public esp_now_light{
   public:
     esp_now_light_Monochromatic(uint8_t *mac_address, int number) : esp_now_light(mac_address, number){};
@@ -215,4 +244,35 @@ void parseLightRGB(uint8_t* data, uint8_t size, AddressableLightState* dest)
   call.perform();
 }
 
+void parseLightRGBW_separate(uint8_t* data, uint8_t size, AddressableLightState* dest_1, LightState* dest_2)
+{
+  ESP_LOGD("custom", "Receiving RGB Light command");
+  // Process data
+  String values = "";
+  for (auto i=0; i<size; i++) 
+    values.concat((const char)data[i]);
+
+  float red = parseFloat(values, ';');
+  float green = parseFloat(values, ';');
+  float blue = parseFloat(values, ';');
+  float white = parseFloat(values, ';');
+  float brightness = parseFloat(values, ';');
+  float transition = parseFloat(values, ';');
+  String effect = parseString(values, ';');
+
+  // Change the RGB light
+  auto call_1 = dest_1->turn_on();
+  call_1.set_rgb(red, green, blue);
+  call_1.set_brightness(brightness);
+  call_1.set_transition_length(transition); 
+  call_1.set_effect(effect.c_str());
+  call_1.perform();
+
+  // Change the Monochromatic Light
+  auto call_2 = dest_2->turn_on();
+  call_2.set_brightness(white);
+  call_2.set_transition_length(transition); 
+  call_2.set_effect(effect.c_str());
+  call_2.perform();
+}
 
