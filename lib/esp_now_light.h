@@ -263,7 +263,14 @@ void parseLightRGBW_separate(uint8_t* data, uint8_t size, AddressableLightState*
   // Change the RGB light
   auto call_1 = dest_1->turn_on();
   call_1.set_rgb(red, green, blue);
-  call_1.set_brightness(brightness);
+  if(red == 0 && green == 0 && blue == 0)
+  {
+    call_1.set_brightness(0);
+  }
+  else
+  {
+    call_1.set_brightness(brightness);
+  }
   call_1.set_transition_length(transition); 
   call_1.set_effect(effect.c_str());
   call_1.perform();
@@ -276,3 +283,11 @@ void parseLightRGBW_separate(uint8_t* data, uint8_t size, AddressableLightState*
   call_2.perform();
 }
 
+//Ping function for light nodes
+void ping()
+{
+  uint8_t dest[6];
+  get_mac_address_raw(dest);
+  std::string command = "<PING";
+  MeshRC::send(dest, 6, command);
+}

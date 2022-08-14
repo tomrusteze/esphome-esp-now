@@ -11,10 +11,20 @@ The purpose of this software is to enable communication between esp devices with
 - The configured transition length in the hub will be transmitted to the nodes.
 - Each node can run multiple lights.
 - Nodes can either use their WiFi connection provided by esphome(Connecting to an Access Point or Setting up an Access point. See the [documentation](https://esphome.io/components/wifi.html)) or no Wi-Fi connection at all, which is in the ```light.yaml``` example. This must be initialized by ```MeshRC::setupwifi(${wifichannel});```.
-- Connect the lights to a power supply. I have all my lights connected behind a relay, which turns the lights on when they must produce light. However, Initialising esp-now takes about a second, so using a power supply, we can easily send the command a little bit later to give esp-now time to initialise.
+- Connect the lights to a power supply. I have all my lights connected behind a relay, which turns the lights on when they must produce light. However, Initialising esp-now takes about a second, so using a power supply, we can easily send the command a little bit later to give esp-now time to initialise and save a lot of power.
+- Light nodes transmit a ping each 10 seconds. This is received by the hub and shows a binary sensor with the status of light nodes. Very usefull for seeing why some lights do not turn on.
+
+### Communication Protocol
+All messages sent over esp-now are of the form <MAC Address> <Direction> <Command> <Arguments>.
+- MAC address is the address of the light node, this is unique and basically functions as the channel on which messages are being sent. Nodes only listen to messages send to their own address.
+- Direction can be either '>' or '<'. '>' means the messages is for the light node (from the hub) and '<' means the message is for the hub (from the light node).
+- Examples of command can be PING, or LIGHT, these are implemented in the esphome files and can be easily changed or added.
+- Arguments can supplement a command with information, such as parameters for the lights.
+This implementation is used to generate so-called channels, these are based on the mac addresses and allow us to easily set up communication with different nodes and easily direct the traffic.
+![Communication diagram](./img/Communication_example.svg)
 
 ## Improvements
-- Add some return channel for the light to show that they are online. In this way, the Hub can relay this information to HomeAssistant.
+- Alter the communication protocol, such that messages have to be confirmed to be received by the hub. (Now it is somewhat similar to UDP, we want to change it to TCP-ish)
 - Add support for more types of lights, such as RGBCT.
 
 ## Goal
@@ -34,11 +44,13 @@ For this guide, I assume that you have esphome up and running and are familiar w
   - Now configure the light node to also connect to this WiFi channel using the substitution:
 ```
 substitutions:
-  devicename: ball_1
+  devicename: light
   wifichannel: "7"
 ```
-  - Find the MAC address of the light node and write it in the hub where you initialize the light:
+  - Find the MAC address of the light node and write it in the hub in its substitutions:
 ```
-    uint8_t light_address_1[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
+substitutions:
+  devicename: hub
+  light_address_1: "{0xff,0xff,0xff,0xff,0xff,0xff};"
 ```
 - Flash the two devices, try looking at the log first to see if it works.

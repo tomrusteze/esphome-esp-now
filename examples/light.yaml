@@ -78,6 +78,15 @@ light:
 
 logger:
 
+interval:
+  - interval: 10sec
+    then:
+      - lambda: |- 
+          ping();
+      - logger.log: 
+          format: "Sending Ping"
+          tag: "MeshRC"
+
 custom_component:
 - lambda: |-
     MeshRC::setupwifi(${wifichannel});
