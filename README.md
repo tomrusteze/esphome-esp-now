@@ -15,7 +15,7 @@ The purpose of this software is to enable communication between esp devices with
 - Light nodes transmit a ping each 10 seconds. This is received by the hub and shows a binary sensor with the status of light nodes. Very usefull for seeing why some lights do not turn on.
 
 ### Communication Protocol
-All messages sent over esp-now are of the form:
+All messages sent over esp-now are of the form: <br>
 ![Data frame](./img/Data_frame.svg)
 - MAC address is the address of the light node, this is unique and basically functions as the channel on which messages are being sent. Nodes only listen to messages send to their own address.
 - Direction can be either '>' or '<'. '>' means the messages is for the light node (from the hub) and '<' means the message is for the hub (from the light node).
