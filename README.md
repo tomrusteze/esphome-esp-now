@@ -21,6 +21,7 @@ All messages sent over esp-now are of the form: <br>
 - Direction can be either '>' or '<'. '>' means the messages is for the light node (from the hub) and '<' means the message is for the hub (from the light node).
 - Examples of command can be PING, or LIGHT, these are implemented in the esphome files and can be easily changed or added.
 - Arguments can supplement a command with information, such as parameters for the lights.
+
 This implementation is used to generate so-called channels, these are based on the mac addresses and allow us to easily set up communication with different nodes and easily direct the traffic.
 ![Communication diagram](./img/Communication_example.svg)
 
