@@ -2,6 +2,7 @@
 First of all, this is based on a similar integration by [iphong](https://github.com/iphong/esphome-espnow), which is now updated to [MeshRC](https://github.com/iphong/lib-esp-rc). 
 ## Purpose
 The purpose of this software is to enable communication between esp devices without a wifi connection. In the example the light acts as a slave and the hub controls the light. I have tried to make the communication as lightweight as possible and similar to service calls in HomeAssistant. The idea is explained in this diagram 
+
 ![Communication diagram](./img/Dataflow_example.svg)
 
 ## Features
@@ -25,6 +26,7 @@ All messages sent over esp-now are of the form:
 - Arguments can supplement a command with information, such as parameters for the lights.
 
 This implementation is used to generate so-called channels, these are based on the mac addresses and allow us to easily set up communication with different nodes and easily direct the traffic.
+
 ![Communication diagram](./img/Communication_example.svg)
 
 ## Improvements
