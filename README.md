@@ -12,7 +12,7 @@ The purpose of this software is to enable communication between esp devices with
 - Each node can run multiple lights.
 - Nodes can either use their WiFi connection provided by esphome(Connecting to an Access Point or Setting up an Access point. See the [documentation](https://esphome.io/components/wifi.html)) or no Wi-Fi connection at all, which is in the ```light.yaml``` example. This must be initialized by ```MeshRC::setupwifi(${wifichannel});```.
 - Connect the lights to a power supply. I have all my lights connected behind a relay, which turns the lights on when they must produce light. However, Initialising esp-now takes about a second, so using a power supply, we can easily send the command a little bit later to give esp-now time to initialise and save a lot of power.
-- Light nodes transmit a ping each 10 seconds. This is received by the hub and shows a binary sensor with the status of light nodes. Very usefull for seeing why some lights do not turn on.
+- Light nodes transmit a ping each 10 seconds. This is received by the hub and shows a binary sensor with the status of light nodes. Very usefull for seeing why some lights do not turn on. (THIS CURRENTLY ONLY WORKS RELIABLY FOR ESP8266 BASED NODES)
 
 ### Communication Protocol
 All messages sent over esp-now are of the form:
