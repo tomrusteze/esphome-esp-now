@@ -1,5 +1,5 @@
 substitutions:
-  devicename: ball_1
+  devicename: light_1
   wifichannel: "7"
 
 esphome:
@@ -77,15 +77,6 @@ light:
               duration: 100ms
 
 logger:
-
-interval:
-  - interval: 10sec
-    then:
-      - lambda: |- 
-          ping();
-      - logger.log: 
-          format: "Sending Ping"
-          tag: "MeshRC"
 
 custom_component:
 - lambda: |-

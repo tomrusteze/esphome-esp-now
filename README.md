@@ -13,7 +13,7 @@ The purpose of this software is to enable communication between esp devices with
 - Each node can run multiple lights.
 - Nodes can either use their WiFi connection provided by esphome(Connecting to an Access Point or Setting up an Access point. See the [documentation](https://esphome.io/components/wifi.html)) or no Wi-Fi connection at all, which is in the ```light.yaml``` example. This must be initialized by ```MeshRC::setupwifi(${wifichannel});```.
 - Connect the lights to a power supply. I have all my lights connected behind a relay, which turns the lights on when they must produce light. However, Initialising esp-now takes about a second, so using a power supply, we can easily send the command a little bit later to give esp-now time to initialise and save a lot of power.
-- Light nodes transmit a ping each 10 seconds. This is received by the hub and shows a binary sensor with the status of light nodes. Very usefull for seeing why some lights do not turn on. (THIS CURRENTLY ONLY WORKS RELIABLY FOR ESP8266 BASED NODES)
+- Light nodes transmit a ping each 10 seconds. This is received by the hub and shows a binary sensor with the status of light nodes. Very usefull for seeing why some lights do not turn on. (This currently works very poorly, recommend to leave this off)
 
 ### Communication Protocol
 All messages sent over esp-now are of the form:
@@ -30,7 +30,7 @@ This implementation is used to generate so-called channels, these are based on t
 ![Communication diagram](./img/Communication_example.svg)
 
 ## Improvements
-- Alter the communication protocol, such that messages have to be confirmed to be received by the hub. (Now it is somewhat similar to UDP, we want to change it to TCP-ish)
+- Alter the communication protocol, such that messages have to be confirmed to be received by the hub. (Now it is somewhat similar to UDP, we want to change it to TCP-ish) (Use [painlessmesh](https://gitlab.com/painlessMesh/painlessMesh))
 - Add support for more types of lights, such as RGBCT.
 
 ## Goal
@@ -44,19 +44,19 @@ As a second attempt, I decided to give each light it's own ESP-01s controller. T
 For this guide, I assume that you have esphome up and running and are familiar with how it all works. We need one microcontroller as a hub and one as a light.
 - Clone this repository.
 - Put the lib folder in you esphome folder.
-- Take the two examples and put them in your esphome folder.
+- Choose a pair of [examples](./examples/) that suit your purpose.
 - Change the data in the examples, such that they are correct for your devices
   - First of all, you need to determine the WiFi channel of the Access Point. You can either download an app such as [WiFi Analyzer](https://play.google.com/store/apps/details?id=com.farproc.wifi.analyzer&hl=nl&gl=US) to determine the WiFi channel of the hub or look at the logs from any esphome device. These will show to what channel your node is connected. Then, make sure that your node always connects to this Access Point, see the esphome [documentation](https://esphome.io/components/wifi.html#connecting-to-multiple-networks).
   - Now configure the light node to also connect to this WiFi channel using the substitution:
-```
-substitutions:
-  devicename: light
-  wifichannel: "7"
-```
+  ```
+  substitutions:
+    devicename: light
+    wifichannel: "7"
+  ```
   - Find the MAC address of the light node and write it in the hub in its substitutions:
-```
-substitutions:
-  devicename: hub
-  light_address_1: "{0xff,0xff,0xff,0xff,0xff,0xff};"
-```
-- Flash the two devices, try looking at the log first to see if it works.
+  ```
+  substitutions:
+    devicename: hub
+    light_address_1: "{0xff,0xff,0xff,0xff,0xff,0xff};"
+  ```
+- Flash the two devices, try looking at the log in a controlled enviroment first to see if it works.
