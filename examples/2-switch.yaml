@@ -1,0 +1,110 @@
+substitutions:
+  devicename: switch
+  comment: ""
+  light_address_1: "{0x00,0x00,0x00,0x00,0x00,0x00}"
+
+esphome:
+  name: $devicename
+  comment: $comment
+  platform: ESP8266
+  board: d1_mini
+  includes:
+  - lib/MeshRC.h
+  - lib/esp_now_light.h
+
+wifi:
+  networks:
+  reboot_timeout: 300s
+
+logger:
+
+api:
+  services:
+    - service: restart_node
+      then:
+        - switch.turn_on: restartswitch
+
+ota:
+  password: $devicename !secret otapass
+
+web_server:
+
+switch:
+  - platform: restart
+    id: restartswitch
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: 0
+      mode: INPUT_PULLUP
+      inverted: true
+    name: "Switch"
+    on_press:
+      light.toggle: light_1
+
+light:
+- platform: custom
+  lambda: |-
+    uint8_t light_address_1[6] = ${light_address_1};
+    auto light_out_1 = new esp_now_light_RGB(light_address_1,1);
+    App.register_component(light_out_1);
+    return {light_out_1};
+  lights:
+    - id: light_1
+      #name: "Custom Light 1"
+      effects:
+      - automation:
+          name: "Addressable 1 (Rainbow)"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Addressable 2 (Color Wipe)"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Addressable 3 (Scan)"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Addressable 4 (Twinkle)"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Addressable 5 (Random Twinkle)"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Addressable 6 (Fireworks)"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Addressable 7 (Random Fireworks)"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Fade"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Strobe"
+          sequence:
+            lambda: ;
+      - automation:
+          name: "Strobe (RGB)"
+          sequence:
+            lambda: ;
+
+sensor:
+  - platform: wifi_signal
+    name: ${devicename} WiFi Signal Sensor
+    unit_of_measurement: "%"
+    filters:
+    - lambda: |-
+        if(x <= -100){
+          return  0;
+        } else if (x >= -50) {
+          return 100;
+        } else {
+          return 2 * (x + 100);
+        }

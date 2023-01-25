@@ -1,0 +1,136 @@
+substitutions:
+  devicename: light_1
+
+esphome:
+  name: ${devicename}
+  platform: ESP8266
+  board: esp01_1m
+  includes:
+  - lib/MeshRC.h
+  - lib/esp_now_light.h
+
+wifi:
+  networks:
+  reboot_timeout: 300s
+
+logger:
+
+api:
+  services:
+    - service: restart_node
+      then:
+        - switch.turn_on: restartswitch
+
+ota:
+  password: $devicename !secret otapass
+
+switch:
+  - platform: restart
+    id: restartswitch
+
+sensor:
+  - platform: wifi_signal
+    name: ${devicename} WiFi Signal Sensor
+    unit_of_measurement: "%"
+    filters:
+    - lambda: |-
+        if(x <= -100){
+          return  0;
+        } else if (x >= -50) {
+          return 100;
+        } else {
+          return 2 * (x + 100);
+        }
+
+web_server:
+
+light:
+  - platform: neopixelbus
+    variant: WS2812
+    pin: RX
+    num_leds: 16
+    type: GRB
+    id: light_1
+    name: ${devicename}
+    effects:
+      - addressable_rainbow:
+          name: "Addressable 1 (Rainbow)"
+          speed: 5
+      - addressable_color_wipe:
+          name: "Addressable 2 (Color Wipe)"
+          add_led_interval: 300ms
+      - addressable_scan:
+          name: "Addressable 3 (Scan)"
+          move_interval: 50ms
+      - addressable_twinkle:
+          name: "Addressable 4 (Twinkle)"
+          progress_interval: 20ms
+          twinkle_probability: 3%
+      - addressable_random_twinkle:
+          name: "Addressable 5 (Random Twinkle)"
+          progress_interval: 50ms
+          twinkle_probability: 20%
+      - addressable_fireworks:
+          name: "Addressable 6 (Fireworks)"
+          fade_out_rate: 160
+      - addressable_fireworks:
+          name: "Addressable 7 (Random Fireworks)"
+          use_random_color: true
+          spark_probability: 15%
+      - random: 
+          name: "Fade"
+          transition_length: 3s
+          update_interval: 10s
+      - strobe:
+          name: "Strobe"
+          colors:
+            - state: true
+              duration: 150ms
+            - state: false
+              duration: 150ms
+      - strobe:
+          name: "Strobe (RGB)"
+          colors:
+            - state: true
+              red: 100%
+              green: 0%
+              blue: 0%
+              duration: 100ms
+            - state: true
+              red: 0%
+              green: 100%
+              blue: 0%
+              duration: 100ms
+            - state: true
+              red: 0%
+              green: 0%
+              blue: 100%
+              duration: 100ms
+            - state: false
+              duration: 100ms
+
+custom_component:
+- lambda: |-    
+    MeshRC::begin();
+
+    ESP_LOGD("custom", "Initialising MeshRC");
+    
+    MeshRC::on("", [](uint8_t* data, uint8_t size) {
+      // Process an incomming message, if it is directed to us, then we handle it.
+      ESP_LOGD("custom", "Receiving any MeshRC message");
+      uint8_t dest[6];
+      get_mac_address_raw(dest);
+      if (size > 6 && MeshRC::equals(data, dest, 6) && (data[6] == '>')) {
+          uint8_t* newData = &data[5];
+          ESP_LOGD("custom", "Receiving meshRC message");
+          newData[0] = '#';
+          MeshRC::recvHandler(MeshRC::sender, newData, size - 5);
+          // MeshRC::send("#<OK");
+      }
+    });
+    
+    MeshRC::on("#>SETLIGHT1", [](uint8_t* data, uint8_t size) {
+      AddressableLightState* dest = id(light_1);
+      parseLightRGB(data, size, dest);
+    });
+    return {};
