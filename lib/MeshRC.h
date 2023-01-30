@@ -41,6 +41,7 @@ uint32_t sendTime;
 uint16_t duration;
 uint8_t *master = NULL;
 bool sending;
+bool esp_now_is_init = false;
 uint8_t psk[] = {'1','2','3','4','5','6','7','8','9','0','a','b','c','d','e','f'};
 
 void setupwifi(int channel){
@@ -53,7 +54,9 @@ void setupwifi(int channel){
 void send(uint8_t *data, uint8_t size) {
 	sending = true;
 	sendTime = micros();
-	esp_now_send(master ? master : broadcast, data, size);
+	if(esp_now_is_init){
+		esp_now_send(master ? master : broadcast, data, size);
+	}
 }
 void send(String data) {
 	send((uint8_t *)data.c_str(), data.length());
@@ -131,10 +134,11 @@ void recvHandler(const uint8_t *addr, const uint8_t *data, int size) {
 
 void begin() {
 	if (esp_now_init() == ESP_OK) {
+		esp_now_is_init = true;
 		if (esp_now_is_peer_exist(broadcast)) {
 			esp_now_del_peer(broadcast);
 		}
-		esp_now_peer_info_t peerInfo;
+		esp_now_peer_info_t peerInfo = {};
 		peerInfo.channel = 0;
 		peerInfo.encrypt = false;
 		memcpy(peerInfo.peer_addr, broadcast, 6);
@@ -174,6 +178,7 @@ esp_now_recv_cb_t recvHandler = [](uint8_t *addr, uint8_t *data, uint8_t size) {
 };
 void begin() {
 	if (esp_now_init() == OK) {
+		esp_now_is_init = true;
 		if (esp_now_is_peer_exist(broadcast)) {
 			esp_now_del_peer(broadcast);
 		}

@@ -28,7 +28,7 @@ class esp_now_light : public Component, public LightOutput {
 
   public:
     esp_now_light(uint8_t *mac_address, int number){
-      memcpy(dest, mac_address,6);
+      memcpy(dest, mac_address, 6);
       this->number = number;
     }
 
