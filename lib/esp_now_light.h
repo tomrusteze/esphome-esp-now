@@ -98,6 +98,35 @@ class esp_now_light_RGB : public esp_now_light{
     } 
 };
 
+class esp_now_light_RGBWW : public esp_now_light{
+  public:
+    esp_now_light_RGBWW(uint8_t *mac_address, int number) : esp_now_light(mac_address, number){};
+ 
+    LightTraits get_traits() override {
+      // return the traits this light supports
+      auto traits = LightTraits();
+      traits.set_supported_color_modes({ColorMode::RGB_COLD_WARM_WHITE, ColorMode::BRIGHTNESS});
+      return traits;
+    }
+
+    std::string toFormat(float red, float green, float blue, float white_1, float white_2, float brightness, uint32_t transition, std::string effect, char delimiter)
+    {
+      return ">SETLIGHT" + to_string(number).substr(0,1) + to_string(red).substr(0,4) + delimiter + to_string(green).substr(0,4) + delimiter + to_string(blue).substr(0,4) + delimiter + to_string(white_1).substr(0,4)
+                + delimiter + to_string(white_2).substr(0,4) + delimiter + to_string(brightness).substr(0,4) + delimiter + to_string(transition).substr(0,4) + delimiter + effect;
+    }
+
+    void write_state(LightState *state) override {
+      // Get the light values:
+      float red, green, blue, white_1, white_2, brightness;
+      uint32_t transition = state->get_default_transition_length();
+      state->remote_values.as_rgbww(&red, &green, &blue, &white_2, &white_1);
+      brightness = state->remote_values.get_color_brightness();
+      // Process the light values:
+      std::string newCommand = toFormat(red, green, blue, white_1, white_2, brightness, transition, state->get_effect_name(),';');
+      send_command(newCommand, state);
+    } 
+};
+
 class esp_now_light_RGBW : public esp_now_light{
   public:
     esp_now_light_RGBW(uint8_t *mac_address, int number) : esp_now_light(mac_address, number){};
@@ -239,6 +268,34 @@ void parseLightRGB(uint8_t* data, uint8_t size, AddressableLightState* dest)
   // Change Light
   auto call = dest->turn_on();
   call.set_rgb(red, green, blue);
+  call.set_brightness(brightness);
+  call.set_transition_length(transition); 
+  call.set_effect(effect.c_str());
+  call.perform();
+}
+
+void parseLightRGBWW(uint8_t* data, uint8_t size, LightState* dest)
+{
+  ESP_LOGD("custom", "Receiving RGBWW Light command");
+  // Process data
+  String values = "";
+  for (auto i=0; i<size; i++) 
+    values.concat((const char)data[i]);
+
+  float red = parseFloat(values, ';');
+  float green = parseFloat(values, ';');
+  float blue = parseFloat(values, ';');
+  float white_1 = parseFloat(values, ';');
+  float white_2 = parseFloat(values, ';');
+  float brightness = parseFloat(values, ';');
+  float transition = parseFloat(values, ';');
+  String effect = parseString(values, ';');
+
+  // Change Light
+  auto call = dest->turn_on();
+  call.set_rgb(red, green, blue);
+  call.set_warm_white(white_1);
+  call.set_cold_white(white_2);
   call.set_brightness(brightness);
   call.set_transition_length(transition); 
   call.set_effect(effect.c_str());

@@ -12,6 +12,7 @@ Different types of lights are supported (RGB(W), monochromatic, binary). You nee
 | Monochromatic | `esp_now_light_Monochromatic()` | `parseLightMonochromatic()` |
 | RGB           | `esp_now_light_RGB()`           | `parseLightRGB()`           |
 | RGBW          | `esp_now_light_RGBW()`          | `parseLightRGBW_separate()` |
+| RGBWW         | `esp_now_light_RGBWW()`         | `parseLightRGBWW()`         |
 
 Keep in mind that addressable lights and non addressable lights have to be handled differently on the receiving side (light). 
 ```
