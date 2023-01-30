@@ -1,6 +1,6 @@
 //
 // Author: Phong Vu
-// Modified by Tom Rust
+// Modified by Tom Rust for use with ESPhome
 //
 #ifndef __MESH_RC_H__
 #define __MESH_RC_H__
@@ -51,33 +51,26 @@ void setupwifi(int channel){
     WiFi.mode(WIFI_STA);
     WiFi.channel(channel);
 }
-void send(uint8_t *data, uint8_t size) {
+
+void send(uint8_t *data, uint8_t size, uint8_t *dest) {
+	// Send to a specific node
 	sending = true;
 	sendTime = micros();
 	if(esp_now_is_init){
-		esp_now_send(master ? master : broadcast, data, size);
+		esp_now_send(dest ? dest : broadcast, data, size);
 	}
 }
-void send(String data) {
-	send((uint8_t *)data.c_str(), data.length());
+
+void send(uint8_t *dest, String data) {
+	memcpy(&buffer[0], (uint8_t *)data.c_str(), data.length());
+	send(buffer, data.length(), dest);
 }
-void send(String data, std::string value) {
-	send(String(data + value.c_str()));
+
+void send(uint8_t *dest, std::string value) {
+	String data = String(value.c_str());
+	send(dest,data);
 }
-void send(uint8_t *data, uint8_t size, String type) {
-	memcpy(&buffer[0], data, size);
-	memcpy(&buffer[size], (uint8_t *)type.c_str(), type.length());
-	send(buffer, type.length() + size);
-}
-void send(String type, uint8_t *data, uint8_t size) {
-	memcpy(&buffer[0], (uint8_t *)type.c_str(), type.length());
-	memcpy(&buffer[type.length()], data, size);
-	send(buffer, type.length() + size);
-}
-void send(uint8_t *data, uint8_t size, std::string value) {
-	String type = String(value.c_str());
-	send(data,size,type);
-}
+
 void getValue(String d) {
 		d = "";
 		for (auto i=0; i<250; i++) d.concat((const char)buffer[i]);
@@ -109,7 +102,23 @@ bool equals(uint8_t *a, uint8_t *b, uint8_t size, uint8_t offset = 0) {
 }
 
 #ifdef USE_ESP32
-void sendHandler(const uint8_t *addr, esp_now_send_status_t err) {
+void setAddr(uint8_t *addr) {
+	if (esp_now_is_peer_exist(addr))
+		esp_now_del_peer(addr);
+	esp_now_peer_info_t peerInfo;
+	peerInfo.channel = 0;
+	peerInfo.encrypt = false;
+	memcpy(peerInfo.peer_addr, addr, 6);
+	esp_now_add_peer(&peerInfo);
+}
+
+void sendHandler(const uint8_t *addr, esp_now_send_status_t sendStatus) {
+	if(sendStatus == ESP_NOW_SEND_SUCCESS){
+		ESP_LOGD("custom", "meshRC message succesfully sent");
+	}
+	else{
+		ESP_LOGD("custom", "meshRC message not succesfully sent");
+	}
 	sending = false;
 	duration = micros() - sendTime;
 }
@@ -149,16 +158,23 @@ void begin() {
 }
 #endif
 #ifdef USE_ESP8266
-void setMaster(uint8_t *addr) {
-	if (esp_now_is_peer_exist(master))
-		esp_now_del_peer(master);
-	master = addr;
-	esp_now_add_peer(master, ESP_NOW_ROLE_COMBO, 1, psk, sizeof(psk));
+void setAddr(uint8_t *addr) {
+	if (esp_now_is_peer_exist(addr))
+		esp_now_del_peer(addr);
+	esp_now_add_peer(addr, ESP_NOW_ROLE_COMBO, 1, 0, 0);
 }
-esp_now_send_cb_t sendHandler = [](uint8_t *addr, uint8_t err) {
+
+esp_now_send_cb_t sendHandler = [](uint8_t *addr, uint8_t sendStatus) {
+	if(sendStatus == 0){
+		ESP_LOGD("custom", "meshRC message succesfully sent");
+	}
+	if(sendStatus == 1){
+		ESP_LOGD("custom", "meshRC message not succesfully sent");
+	}
 	sending = false;
 	duration = micros() - sendTime;
 };
+
 esp_now_recv_cb_t recvHandler = [](uint8_t *addr, uint8_t *data, uint8_t size) {
 	static uint8_t offset, i;
 	// Only receives from master if set
@@ -176,6 +192,7 @@ esp_now_recv_cb_t recvHandler = [](uint8_t *addr, uint8_t *data, uint8_t size) {
 		ignored++;
 	}
 };
+
 void begin() {
 	if (esp_now_init() == OK) {
 		esp_now_is_init = true;
@@ -188,6 +205,8 @@ void begin() {
 		esp_now_register_recv_cb(recvHandler);
 	}
 }
+
+
 #endif
 }  // namespace MeshRC
 

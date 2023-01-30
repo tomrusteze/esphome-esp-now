@@ -21,7 +21,7 @@ class esp_now_light : public Component, public LightOutput {
   #ifdef USE_POWER_SUPPLY
         state->remote_values.is_on() ? this->power_.request() : this->power_.unrequest();
   #endif
-        MeshRC::send(dest, 6, newCommand);
+        MeshRC::send(dest, newCommand);
         command = newCommand;
       }
     }
@@ -40,7 +40,8 @@ class esp_now_light : public Component, public LightOutput {
     float get_setup_priority() const override { return esphome::setup_priority::AFTER_WIFI; }
 
     void setup() override {
-      MeshRC::begin();    
+      MeshRC::begin();
+      MeshRC::setAddr(dest);    
     }
     
     LightTraits get_traits() override {
@@ -289,5 +290,5 @@ void ping()
   uint8_t dest[6];
   get_mac_address_raw(dest);
   std::string command = "<PING";
-  MeshRC::send(dest, 6, command);
+  MeshRC::send(dest, command);
 }
