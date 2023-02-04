@@ -34,6 +34,7 @@ struct esp_rc_event_t {
 uint8_t buffer[250];
 uint8_t broadcast[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 uint8_t events_num = 0;
+uint32_t sent_error = 0;
 uint32_t received;
 uint32_t ignored;
 uint8_t *sender;
@@ -118,6 +119,7 @@ void sendHandler(const uint8_t *addr, esp_now_send_status_t sendStatus) {
 	}
 	else{
 		ESP_LOGD("custom", "meshRC message not succesfully sent");
+		sent_error++;
 	}
 	sending = false;
 	duration = micros() - sendTime;
@@ -170,6 +172,7 @@ esp_now_send_cb_t sendHandler = [](uint8_t *addr, uint8_t sendStatus) {
 	}
 	if(sendStatus == 1){
 		ESP_LOGD("custom", "meshRC message not succesfully sent");
+		sent_error++;
 	}
 	sending = false;
 	duration = micros() - sendTime;
