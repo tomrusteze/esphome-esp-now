@@ -1,6 +1,7 @@
 # Examples
 This folder contains useable examples for 2 scenarios. At the very least you will need two esp devices flashed with esphome.
 1. One hub with lights only accessible over esp-now. This is the original scenario that this project was created for. The lights have **NO** direct connection to Wi-Fi or HomeAssistant. It contains two lights but it can easily extend to include more (or only one). This example also includes a power supply that turns off the lights when they are not used. The lights will be presented to HomeAssistant as being part of the hub. 
+It is possible to use a second esp chip to transmit the esp-now signal. You then need to connect this transmitter over serial and flash [1-hub-serial.yaml](1-hub-serial.yaml).
 2. A switch and a light. The switch only has a binary sensor, when pressed, it toggles the light. Both devices are connected to HomeAssistant, but the switch will **ONLY** use esp-now to control the light. The switch currently does not know when the state of the light has changed, so it may not work perfectly.
 
 ## Light types
