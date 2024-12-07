@@ -75,8 +75,11 @@ public:
 
   void setup() override
   {
-    MeshRC::begin();
-    MeshRC::setAddr(dest);
+    if (!this->use_uart)
+    {
+      MeshRC::begin();
+      MeshRC::setAddr(dest);
+    }
   }
 
   LightTraits get_traits() override
@@ -108,7 +111,7 @@ public:
 class esp_now_light_RGB : public esp_now_light
 {
 public:
-  esp_now_light_RGB(uint8_t *mac_address, int number) : esp_now_light(mac_address, number){};
+  esp_now_light_RGB(uint8_t *mac_address, int number) : esp_now_light(mac_address, number) {};
 
   LightTraits get_traits() override
   {
@@ -140,7 +143,7 @@ public:
 class esp_now_light_RGB_serial : public esp_now_light_RGB
 {
 public:
-  esp_now_light_RGB_serial(uint8_t *mac_address, int number) : esp_now_light_RGB(mac_address, number){};
+  esp_now_light_RGB_serial(uint8_t *mac_address, int number) : esp_now_light_RGB(mac_address, number) {};
 
   void send_command(std::string newCommand, LightState *state)
   {
@@ -159,7 +162,7 @@ public:
 class esp_now_light_RGBWW : public esp_now_light
 {
 public:
-  esp_now_light_RGBWW(uint8_t *mac_address, int number) : esp_now_light(mac_address, number){};
+  esp_now_light_RGBWW(uint8_t *mac_address, int number) : esp_now_light(mac_address, number) {};
 
   LightTraits get_traits() override
   {
@@ -190,7 +193,7 @@ public:
 class esp_now_light_RGBW : public esp_now_light
 {
 public:
-  esp_now_light_RGBW(uint8_t *mac_address, int number) : esp_now_light(mac_address, number){};
+  esp_now_light_RGBW(uint8_t *mac_address, int number) : esp_now_light(mac_address, number) {};
 
   LightTraits get_traits() override
   {
@@ -221,7 +224,7 @@ public:
 class esp_now_light_Monochromatic : public esp_now_light
 {
 public:
-  esp_now_light_Monochromatic(uint8_t *mac_address, int number) : esp_now_light(mac_address, number){};
+  esp_now_light_Monochromatic(uint8_t *mac_address, int number) : esp_now_light(mac_address, number) {};
 
   LightTraits get_traits() override
   {
