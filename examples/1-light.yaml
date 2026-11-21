@@ -1,24 +1,39 @@
 substitutions:
-  devicename: light_1
-  wifichannel: "7"
+  radio_channel: "7"
 
 esphome:
-  name: light
-  platform: ESP8266
+  name: espnow-light
+
+esp8266:
   board: esp01_1m
-  includes:
-  - lib/MeshRC.h
-  - lib/esp_now_light.h
-  libraries:
-  - ESP8266WiFi
+
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components: [esp_now_light]
+
+espnow:
+  id: radio
+  channel: ${radio_channel}
+
+logger:
+  baud_rate: 0
+
+esp_now_light:
+  espnow_id: radio
+  receivers:
+    - light_id: garden_light
+      light_type: rgb
+      light_number: 1
 
 light:
   - platform: neopixelbus
     variant: WS2812
-    pin: RX
+    pin: GPIO3
     num_leds: 16
     type: GRB
-    id: light_1
+    id: garden_light
     effects:
       - addressable_rainbow:
           name: "Addressable 1 (Rainbow)"
@@ -75,19 +90,3 @@ light:
               duration: 100ms
             - state: false
               duration: 100ms
-
-logger:
-
-custom_component:
-- lambda: |-
-    MeshRC::setupwifi(${wifichannel});
-    
-    MeshRC::begin();
-
-    ESP_LOGD("custom", "Initialising MeshRC");
-       
-    MeshRC::on(">SETLIGHT1", [](uint8_t* data, uint8_t size) {
-      AddressableLightState* dest = id(light_1);
-      parseLightRGB(data, size, dest);
-    });
-    return {};

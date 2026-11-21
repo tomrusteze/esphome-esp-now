@@ -6,8 +6,13 @@
 #ifndef __MESH_RC_H__
 #define __MESH_RC_H__
 
-#include <espnow.h>
 #include <ESP8266WiFi.h>
+
+extern "C" {
+#include <c_types.h>
+#include <espnow.h>
+#include <user_interface.h>
+}
 
 namespace MeshRC
 {
@@ -25,41 +30,37 @@ namespace MeshRC
 	uint8_t buffer[250];
 	uint8_t broadcast[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 	uint8_t events_num = 0;
-	uint32_t sent_error = 0;
+	volatile uint32_t sent_error = 0;
+	uint32_t rejected = 0;
 	uint32_t received;
 	uint32_t ignored;
 	uint8_t *sender;
-	uint32_t sendTime;
-	uint16_t duration;
 	uint8_t *master = NULL;
-	bool sending;
 	bool esp_now_is_init = false;
 	uint8_t psk[] = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'a', 'b', 'c', 'd', 'e', 'f'};
 
 	void setupwifi(int channel)
 	{
-		// Use this function when you want the node to only communicate over esp-now.
-		WiFi.mode(WIFI_AP_STA);
-		WiFi.softAP("temp", "temppass", channel, true, 0);
 		WiFi.mode(WIFI_STA);
-		WiFi.channel(channel);
+		wifi_set_channel(channel);
 	}
 
-	void send(uint8_t *data, uint8_t size, uint8_t *dest)
+	void send(uint8_t *dest, const String &data)
 	{
-		// Send to a specific node
-		sending = true;
-		sendTime = micros();
-		if (esp_now_is_init)
+		if (!esp_now_is_init || data.length() == 0 || data.length() > sizeof(buffer))
 		{
-			esp_now_send(dest ? dest : broadcast, data, size);
+			rejected++;
+			return;
 		}
-	}
-
-	void send(uint8_t *dest, String data)
-	{
-		memcpy(&buffer[0], (uint8_t *)data.c_str(), data.length());
-		send(buffer, data.length(), dest);
+		if (!esp_now_is_peer_exist(dest) &&
+		    esp_now_add_peer(dest, ESP_NOW_ROLE_COMBO, wifi_get_channel(), nullptr, 0) != 0)
+		{
+			rejected++;
+			return;
+		}
+		memcpy(buffer, data.c_str(), data.length());
+		if (esp_now_send(dest, buffer, data.length()) != 0)
+			rejected++;
 	}
 
 	void getValue(String d)
@@ -75,11 +76,6 @@ namespace MeshRC
 	void on(String prefix, esp_rc_data_callback_t callback)
 	{
 		events[events_num++] = (esp_rc_event_t){prefix, NULL, callback};
-	}
-	void wait()
-	{
-		while (MeshRC::sending)
-			yield(); // Wait while sending
 	}
 	void delayMs(uint32_t time)
 	{
@@ -102,21 +98,12 @@ namespace MeshRC
 		return true;
 	}
 
-	void setAddr(uint8_t *addr)
-	{
-		if (esp_now_is_peer_exist(addr))
-			esp_now_del_peer(addr);
-		esp_now_add_peer(addr, ESP_NOW_ROLE_COMBO, 1, 0, 0);
-	}
-
 	esp_now_send_cb_t sendHandler = [](uint8_t *addr, uint8_t sendStatus)
 	{
 		if (sendStatus == 1)
 		{
-			sent_error++;
+			sent_error = sent_error + 1;
 		}
-		sending = false;
-		duration = micros() - sendTime;
 	};
 
 	esp_now_recv_cb_t recvHandler = [](uint8_t *addr, uint8_t *data, uint8_t size)
@@ -155,7 +142,7 @@ namespace MeshRC
 				esp_now_del_peer(broadcast);
 			}
 			esp_now_set_self_role(ESP_NOW_ROLE_COMBO);
-			esp_now_add_peer(broadcast, ESP_NOW_ROLE_COMBO, 1, 0, 0);
+			esp_now_add_peer(broadcast, ESP_NOW_ROLE_COMBO, wifi_get_channel(), nullptr, 0);
 			esp_now_register_send_cb(sendHandler);
 			esp_now_register_recv_cb(recvHandler);
 		}

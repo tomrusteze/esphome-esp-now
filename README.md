@@ -1,75 +1,72 @@
-# ESP-Now integration for ESPhome
-First of all, this is based on a similar integration by [iphong](https://github.com/iphong/esphome-espnow), which is now updated to [MeshRC](https://github.com/iphong/lib-esp-rc). 
-## Purpose
-The purpose of this software is to enable communication between esp devices without a wifi connection. In the example the light acts as a slave and the hub controls the light. I have tried to make the communication as lightweight as possible and similar to service calls in HomeAssistant. The idea is explained in this diagram 
+# ESP-NOW lights for ESPHome
 
-![Communication diagram](./img/Dataflow_example.svg)
+Control lights on ESP32 or ESP8266 nodes over ESP-NOW. A hub exposes remote lights to Home Assistant, or a physical switch controls a light directly. A receiver can run on a fixed radio channel without joining a Wi-Fi network. An optional UART relay lets the hub use Ethernet or a Wi-Fi channel different from the light nodes.
 
-## Features
-- Using a node running esphome you can control a light on a different node also running esphome with the communication using esp-now. Changing colour, effects and brightness are supported. As of Jan 29, multiple lights are supported. Differentiation between lights is done using the MAC address.
-- Support for the ESP32 microcontroller is added for the Hub.
-- Nodes can run Binary, Monochromatic, RGB and RGBW Lights.
-- The configured transition length in the hub will be transmitted to the nodes.
-- Each node can run multiple lights.
-- Nodes can either use their WiFi connection provided by esphome(Connecting to an Access Point or Setting up an Access point. See the [documentation](https://esphome.io/components/wifi.html)) or no Wi-Fi connection at all, which is in the ```light.yaml``` example. This must be initialized by ```MeshRC::setupwifi(${wifichannel});```.
-- Connect the lights to a power supply. I have all my lights connected behind a relay, which turns the lights on when they must produce light. However, Initializing esp-now takes about a second, so using a power supply, we can easily send the command a little bit later to give esp-now time to initialize and save a lot of power.
-- Send the esp-now messages using a dedicated esp8266. (see [examples](examples)).
+The project builds on [iphong's ESPHome ESP-NOW integration](https://github.com/iphong/esphome-espnow) and [MeshRC](https://github.com/iphong/lib-esp-rc).
 
-### Communication Protocol
-All messages sent over esp-now are of the form:
+## Install
 
-![Data frame](./img/Data_frame.svg)
+Use **ESPHome 2026.11.0 or later** on ESP8266 or ESP32. Add this block to each ESPHome device that uses the integration. [ESPHome external components documentation](https://esphome.io/components/external_components/)
 
-- MAC address is the address of the light node, this is unique and basically functions as the channel on which messages are being sent. Nodes only listen to messages send to their own address.
-- Direction can be either '>' or '<'. '>' means the messages is for the light node (from the hub) and '<' means the message is for the hub (from the light node).
-- Examples of command can be PING, or LIGHT, these are implemented in the esphome files and can be easily changed or added.
-- Arguments can supplement a command with information, such as parameters for the lights.
+```yaml
+external_components:
+  - source: github://tomrusteze/esphome-esp-now@main
+    components: [esp_now_light]
+```
 
-This implementation is used to generate so-called channels, these are based on the mac addresses and allow us to easily set up communication with different nodes and easily direct the traffic.
+For a local checkout, see the [example configurations](examples/README.md).
 
-![Communication diagram](./img/Communication_example.svg)
+## Configure a hub and receiver
 
-## Improvements
-- Alter the communication protocol, such that messages have to be confirmed to be received by the hub. (Now it is somewhat similar to UDP, we want to change it to TCP-ish) (Use [painlessmesh](https://gitlab.com/painlessMesh/painlessMesh))
-- Add support for more types of lights, such as RGBCT.
+Set `mac_address` on the hub to the receiver's Wi-Fi station MAC address. The package registers outgoing peers with ESPHome's built-in `espnow` component. A hub that joins Wi-Fi uses the access point's channel. A hub without Wi-Fi needs an explicit `espnow.channel`. [ESPHome ESP-NOW documentation](https://esphome.io/components/espnow/)
 
-## Goal
-I wanted to have some nice lights in my garden, they should be controllable by HomeAssistant so that they eventually would be able to react to movement.
+```yaml
+# Hub entries for a device already configured with wifi:
+espnow:
+  id: radio
 
-### First attempt
-Firstly, I decided to use [cheap commercial solar lights](https://offers.kd2.org/en/gb/lidl/pFpK/) and replace the hardware with some NeoPixel LEDs (WS2812 Ring). These LEDs would be controlled via an ESP chip from indoors. So all the data would travel underground to all the lights. All lights would be chained together so that every led in every light could be controlled individually. Unfortunately carrying the data over such a long distance underground proved almost impossible.
+light:
+  - platform: esp_now_light
+    name: "Garden Light"
+    espnow_id: radio
+    mac_address: "02:00:00:00:00:01"
+    light_type: rgb
+    light_number: 1
+```
 
-### Second attempt
-As a second attempt, I decided to give each light it's own ESP-01s controller. They are very cheap (~1 USD) and they have wifi capability. I do however not want to use WiFi for all lights (4 at the moment) in my garden, since this would put some stress on my home network. Hence I decided to use the esp-now protocol to communicate between a hub and the lights.
+On the receiver, point `light_id` at an existing ESPHome light. Use the same light type and number at both ends. If the receiver joins Wi-Fi, omit `channel` and make sure its access point uses the sender's channel.
 
-### Third attempt
-One of the downsides of esp-now is that it only works if you are connected to the right WiFi channel. To solve this, I added the possibility to use a second esp8266 as the transmitter of the esp-now signal. The hub communicates with this transmitter over UART (Serial), and the transmitter just relays the signal. Using this strategy, WiFi channels can no longer cause issues and it should even be possible to use an ESP32 with an Ethernet connection as a hub.
+```yaml
+# Receiver entries for a device that uses ESP-NOW without wifi:
+espnow:
+  id: radio
+  channel: 7
 
-## Usage
-For this guide, I assume that you have esphome up and running and are familiar with how it all works. We need one microcontroller as a hub and one as a light.
-- Clone this repository.
-- Put the lib folder in you esphome folder.
-- Choose a pair of [examples](./examples/) that suit your purpose.
-- Change the data in the examples, such that they are correct for your devices
-  - __(If you use the UART transmitter you can skip this step - You only need to pick a WiFi channel)__ First of all, you need to determine the WiFi channel of the Access Point. You can either download an app such as [WiFi Analyzer](https://play.google.com/store/apps/details?id=com.farproc.wifi.analyzer&hl=nl&gl=US) to determine the WiFi channel of the hub or look at the logs from any esphome device. These will show to what channel your node is connected. Then, make sure that your node always connects to this Access Point, see the esphome [documentation](https://esphome.io/components/wifi.html#connecting-to-multiple-networks).
-  - Now configure the light node to also connect to this WiFi channel using the substitution:
-  ```
-  substitutions:
-    devicename: light
-    wifichannel: "7"
-  ```
-  - If you use a UART transmitter, you should use Arduino to flash [serial-to-espnow.ino](serial-to-espnow/serial-to-espnow.ino) to your transmitter (I suggest using an ESP-01s for this function). Make sure to fill in the correct wifi channel in line 12 (`MeshRC::setupwifi(<channel>);`). Make the following connections with the ESP-01s:
-  
-  | **HUB** | **ESP-01s (transmitter)** |
-  |---------|---------------------------|
-  | RX      | TX                        |
-  | TX      | RX                        |
-  | 3v      | 3v                        |
-  | GND     | GND                       |
-  - Find the MAC address of the light node and write it in the hub in its substitutions:
-  ```
-  substitutions:
-    devicename: hub
-    light_address_1: "{0xff,0xff,0xff,0xff,0xff,0xff};"
-  ```
-- Flash the two devices, try looking at the log in a controlled environment first to see if it works.
+esp_now_light:
+  espnow_id: radio
+  receivers:
+    - light_id: garden_light
+      light_type: rgb
+      light_number: 1
+```
+
+- `light_type` accepts `binary`, `monochromatic`, `rgb`, `rgbw`, and `rgbww`.
+- `light_number` defaults to `1` and accepts `1` through `9`. Give each light on the same receiver a different number. Lights on different devices can reuse a number.
+- `espnow_id` is optional on the receiver when there is only one `espnow` instance. Set `source_address` on the receiver to accept commands from a specific transmitter MAC.
+- For RGBW, either target a single RGBW light or set `white_light_id` to a separate monochromatic light alongside the RGB target.
+- Define effects on the physical light. To expose those effects on the hub, add automation effects with the same names and a no-op sequence such as `delay: 0ms`. The sender forwards the effect name and the configured default transition length for dimmable lights.
+- An optional `power_supply` on each hub light holds an ESPHome power supply on while the light is on. Set its `enable_time` to allow the receiver to boot and its `keep_on_time` to allow an off command and transition to finish.
+
+The hub state is optimistic. A change made on the receiver is independent of the hub's state.
+
+## UART relay
+
+Flash [serial-to-espnow.ino](serial-to-espnow/serial-to-espnow.ino) with the Arduino ESP8266 core. Set the channel in `MeshRC::setupwifi(7)` to match the receivers. Connect the hub's TX to the relay's RX, the hub's RX to the relay's TX, and share ground. Use 3.3 V logic and supply appropriate power to the relay.
+
+Use `uart_id` in place of `espnow_id` on each hub light. Set the UART to 115200 baud, 8 data bits, no parity, and one stop bit. The optional `sensor` platform `esp_now_light` reads the relay's cumulative transmission error count on the same bus. See the [UART hub example](examples/1-hub-serial.yaml).
+
+## Upgrade a legacy configuration
+
+Replace the hub's `platform: custom` light with `platform: esp_now_light`. Convert each C++ MAC array to a colon-separated `mac_address` and move its light number, transport, and power supply into the YAML fields above. Replace the receiver's `custom_component` lambda with `esp_now_light.receivers`. When using the UART error sensor, replace its custom platform with `platform: esp_now_light`. Remove the old `esphome.includes` entries from each migrated configuration.
+
+The light commands retain the `>SETLIGHT<number>` prefix and semicolon-delimited values. The UART relay also retains its decimal MAC prefix and newline framing. The original headers remain in [lib/](lib/) for legacy configurations.

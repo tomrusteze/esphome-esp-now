@@ -1,57 +1,49 @@
 #include "MeshRC.h"
 
-#define USE_ESP8266
-#define NO_ESPHOME
-
-uint32_t sent_error = 0;
+uint32_t last_error_count = 0;
 
 void setup()
 {
   Serial.begin(115200);
-
   MeshRC::setupwifi(7);
   MeshRC::begin();
 }
 
-void loop()
+void sendCommand(const String &line)
 {
-
-  if (Serial.available())
+  unsigned parts[6];
+  int offset = 0;
+  if (sscanf(line.c_str(), "%u %u %u %u %u %u %n",
+             &parts[0], &parts[1], &parts[2], &parts[3], &parts[4], &parts[5], &offset) != 6 ||
+      !line.substring(offset).startsWith(">SETLIGHT"))
   {
-    String s = Serial.readStringUntil('\n');
-    sendCommand(s);
-    Serial.println(sent_error);
+    MeshRC::rejected++;
+    return;
   }
-
-  if (sent_error != MeshRC::sent_error)
-  {
-    sent_error = MeshRC::sent_error;
-    Serial.println(sent_error);
-  }
-}
-
-uint8_t parseInt(String &data, char delimiter)
-{
-  int pos = data.indexOf(delimiter);
-  uint8_t value = data.substring(0, pos).toInt();
-  data.remove(0, pos + 1);
-  return value;
-}
-
-void sendCommand(String &str)
-{
-  int pos = str.indexOf('>');
-  String address_str = str.substring(0, pos);
-  String command = str.substring(pos);
 
   uint8_t address[6];
+  for (size_t i = 0; i < sizeof(address); i++)
+  {
+    if (parts[i] > 255)
+    {
+      MeshRC::rejected++;
+      return;
+    }
+    address[i] = parts[i];
+  }
 
-  address[0] = parseInt(address_str, ' ');
-  address[1] = parseInt(address_str, ' ');
-  address[2] = parseInt(address_str, ' ');
-  address[3] = parseInt(address_str, ' ');
-  address[4] = parseInt(address_str, ' ');
-  address[5] = parseInt(address_str, ' ');
+  MeshRC::send(address, line.substring(offset));
+}
 
-  MeshRC::send(address, command);
+void loop()
+{
+  if (Serial.available())
+    sendCommand(Serial.readStringUntil('\n'));
+
+  const uint32_t errors = MeshRC::sent_error + MeshRC::rejected;
+  if (errors != last_error_count)
+  {
+    last_error_count = errors;
+    Serial.println(errors);
+  }
 }
