@@ -1,57 +1,49 @@
 substitutions:
-  devicename: light_1
+  wifi_ssid: "Your Wi-Fi SSID"
+  wifi_password: "your-wifi-password"
 
 esphome:
-  name: ${devicename}
-  platform: ESP8266
+  name: espnow-wifi-light
+
+esp8266:
   board: esp01_1m
-  includes:
-  - lib/MeshRC.h
-  - lib/esp_now_light.h
+
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components: [esp_now_light]
 
 wifi:
-  networks:
-  reboot_timeout: 300s
-
-logger:
+  ssid: ${wifi_ssid}
+  password: ${wifi_password}
 
 api:
-  services:
-    - service: restart_node
-      then:
-        - switch.turn_on: restartswitch
 
 ota:
-  password: $devicename !secret otapass
+  - platform: esphome
 
-switch:
-  - platform: restart
-    id: restartswitch
+espnow:
+  id: radio
 
-sensor:
-  - platform: wifi_signal
-    name: ${devicename} WiFi Signal Sensor
-    unit_of_measurement: "%"
-    filters:
-    - lambda: |-
-        if(x <= -100){
-          return  0;
-        } else if (x >= -50) {
-          return 100;
-        } else {
-          return 2 * (x + 100);
-        }
+logger:
+  baud_rate: 0
 
-web_server:
+esp_now_light:
+  espnow_id: radio
+  receivers:
+    - light_id: garden_light
+      light_type: rgb
+      light_number: 1
 
 light:
   - platform: neopixelbus
     variant: WS2812
-    pin: RX
+    pin: GPIO3
     num_leds: 16
     type: GRB
-    id: light_1
-    name: ${devicename}
+    id: garden_light
+    name: "Garden Light"
     effects:
       - addressable_rainbow:
           name: "Addressable 1 (Rainbow)"
@@ -108,15 +100,3 @@ light:
               duration: 100ms
             - state: false
               duration: 100ms
-
-custom_component:
-- lambda: |-    
-    MeshRC::begin();
-
-    ESP_LOGD("custom", "Initialising MeshRC");
-       
-    MeshRC::on(">SETLIGHT1", [](uint8_t* data, uint8_t size) {
-      AddressableLightState* dest = id(light_1);
-      parseLightRGB(data, size, dest);
-    });
-    return {};

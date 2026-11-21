@@ -1,42 +1,38 @@
 substitutions:
-  devicename: switch
-  comment: ""
-  light_address_1: "{0x00,0x00,0x00,0x00,0x00,0x00}"
+  wifi_ssid: "Your Wi-Fi SSID"
+  wifi_password: "your-wifi-password"
+  light_address_1: "02:00:00:00:00:01"
 
 esphome:
-  name: $devicename
-  comment: $comment
-  platform: ESP8266
+  name: espnow-switch
+
+esp8266:
   board: d1_mini
-  includes:
-  - lib/MeshRC.h
-  - lib/esp_now_light.h
+
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components: [esp_now_light]
 
 wifi:
-  networks:
-  reboot_timeout: 300s
+  ssid: ${wifi_ssid}
+  password: ${wifi_password}
+
+api:
+
+ota:
+  - platform: esphome
 
 logger:
 
-api:
-  services:
-    - service: restart_node
-      then:
-        - switch.turn_on: restartswitch
-
-ota:
-  password: $devicename !secret otapass
-
-web_server:
-
-switch:
-  - platform: restart
-    id: restartswitch
+espnow:
+  id: radio
 
 binary_sensor:
   - platform: gpio
     pin:
-      number: 0
+      number: GPIO0
       mode: INPUT_PULLUP
       inverted: true
     name: "Switch"
@@ -44,67 +40,50 @@ binary_sensor:
       light.toggle: light_1
 
 light:
-- platform: custom
-  lambda: |-
-    uint8_t light_address_1[6] = ${light_address_1};
-    auto light_out_1 = new esp_now_light_RGB(light_address_1,1);
-    App.register_component(light_out_1);
-    return {light_out_1};
-  lights:
-    - id: light_1
-      #name: "Custom Light 1"
-      effects:
+  - platform: esp_now_light
+    id: light_1
+    light_type: rgb
+    mac_address: ${light_address_1}
+    light_number: 1
+    espnow_id: radio
+    effects:
       - automation:
           name: "Addressable 1 (Rainbow)"
           sequence:
-            lambda: ;
+            - delay: 0ms
       - automation:
           name: "Addressable 2 (Color Wipe)"
           sequence:
-            lambda: ;
+            - delay: 0ms
       - automation:
           name: "Addressable 3 (Scan)"
           sequence:
-            lambda: ;
+            - delay: 0ms
       - automation:
           name: "Addressable 4 (Twinkle)"
           sequence:
-            lambda: ;
+            - delay: 0ms
       - automation:
           name: "Addressable 5 (Random Twinkle)"
           sequence:
-            lambda: ;
+            - delay: 0ms
       - automation:
           name: "Addressable 6 (Fireworks)"
           sequence:
-            lambda: ;
+            - delay: 0ms
       - automation:
           name: "Addressable 7 (Random Fireworks)"
           sequence:
-            lambda: ;
+            - delay: 0ms
       - automation:
           name: "Fade"
           sequence:
-            lambda: ;
+            - delay: 0ms
       - automation:
           name: "Strobe"
           sequence:
-            lambda: ;
+            - delay: 0ms
       - automation:
           name: "Strobe (RGB)"
           sequence:
-            lambda: ;
-
-sensor:
-  - platform: wifi_signal
-    name: ${devicename} WiFi Signal Sensor
-    unit_of_measurement: "%"
-    filters:
-    - lambda: |-
-        if(x <= -100){
-          return  0;
-        } else if (x >= -50) {
-          return 100;
-        } else {
-          return 2 * (x + 100);
-        }
+            - delay: 0ms

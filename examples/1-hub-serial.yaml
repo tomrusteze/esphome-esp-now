@@ -1,191 +1,146 @@
 substitutions:
-  devicename: hub-serial
-  comment: "esp-now hub test config esp8266 serial"
-  light_address_1: "{0x00,0x00,0x00,0x00,0x00,0x00}"
-  light_address_2: "{0x00,0x00,0x00,0x00,0x00,0x00}"
-  time_on_delay: 0s
-  time_off_delay: 0s
+  wifi_ssid: "Your Wi-Fi SSID"
+  wifi_password: "your-wifi-password"
+  light_address_1: "02:00:00:00:00:01"
+  light_address_2: "02:00:00:00:00:02"
 
 esphome:
-  name: $devicename
-  comment: $comment
-  platform: ESP8266
-  board: d1_mini
-  includes:
-  - lib/MeshRC.h
-  - lib/esp_now_light.h
-  - lib/uart_int_sensor.h
+  name: espnow-hub-serial
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components: [esp_now_light]
 
 wifi:
-  power_save_mode: NONE
-  networks:
+  ssid: ${wifi_ssid}
+  password: ${wifi_password}
 
-uart:
-  tx_pin: TX
-  rx_pin: RX
-  baud_rate: 115200
-  id: uart_bus
+api:
+
+ota:
+  - platform: esphome
 
 logger:
   baud_rate: 0
 
-api:
-  services:
-    - service: restart_node
-      then:
-        - switch.turn_on: restartswitch
-
-ota:
-  password: $devicename !secret otapass
-
-web_server:
-
-switch:
-  - platform: restart
-    id: restartswitch
+uart:
+  id: relay_uart
+  tx_pin: GPIO17
+  rx_pin: GPIO16
+  baud_rate: 115200
 
 power_supply:
-  - id: 'power_supply1'
-    enable_time: ${time_on_delay}
-    keep_on_time: ${time_off_delay}
-    pin: 
-      number: 2
-      inverted: true
+  - id: light_power
+    pin: GPIO4
+    enable_time: 2s
+    keep_on_time: 10s
 
 light:
-- platform: custom
-  lambda: |-
-    uint8_t light_address_1[6] = ${light_address_1};
-    
-    auto light_out_1 = new esp_now_light_RGB(light_address_1,1);
-    light_out_1->set_power_supply(id(power_supply1));
-    light_out_1->set_uart(id(uart_bus));
-
-    App.register_component(light_out_1);
-    return {light_out_1};
-
-    uint8_t light_address_1[6] = ${light_address_1};
-    uint8_t light_address_2[6] = ${light_address_2};
-
-    auto light_out_1 = new esp_now_light_RGB(light_address_1,1);
-    auto light_out_2 = new esp_now_light_RGB(light_address_2,1);
-
-    light_out_1->set_power_supply(id(power_supply1));
-    light_out_2->set_power_supply(id(power_supply1));
-
-    light_out_1->set_uart(id(uart_bus));
-    light_out_2->set_uart(id(uart_bus));
-
-    App.register_component(light_out_1);
-    App.register_component(light_out_2);
-
-    return {light_out_1, light_out_2};
-  lights:
-    - name: "Custom Light 1"
-      effects:
+  - platform: esp_now_light
+    name: "Garden Light 1"
+    light_type: rgb
+    mac_address: ${light_address_1}
+    light_number: 1
+    uart_id: relay_uart
+    power_supply: light_power
+    effects:
       - automation:
           name: "Addressable 1 (Rainbow)"
           sequence:
-            lambda: ;
+            - delay: 0ms
       - automation:
           name: "Addressable 2 (Color Wipe)"
           sequence:
-            lambda: ;
+            - delay: 0ms
       - automation:
           name: "Addressable 3 (Scan)"
           sequence:
-            lambda: ;
+            - delay: 0ms
       - automation:
           name: "Addressable 4 (Twinkle)"
           sequence:
-            lambda: ;
+            - delay: 0ms
       - automation:
           name: "Addressable 5 (Random Twinkle)"
           sequence:
-            lambda: ;
+            - delay: 0ms
       - automation:
           name: "Addressable 6 (Fireworks)"
           sequence:
-            lambda: ;
+            - delay: 0ms
       - automation:
           name: "Addressable 7 (Random Fireworks)"
           sequence:
-            lambda: ;
+            - delay: 0ms
       - automation:
           name: "Fade"
           sequence:
-            lambda: ;
+            - delay: 0ms
       - automation:
           name: "Strobe"
           sequence:
-            lambda: ;
+            - delay: 0ms
       - automation:
           name: "Strobe (RGB)"
           sequence:
-            lambda: ;
-    - name: "Custom Light 2"
-      effects:
+            - delay: 0ms
+  - platform: esp_now_light
+    name: "Garden Light 2"
+    light_type: rgb
+    mac_address: ${light_address_2}
+    light_number: 1
+    uart_id: relay_uart
+    power_supply: light_power
+    effects:
       - automation:
           name: "Addressable 1 (Rainbow)"
           sequence:
-            lambda: ;
+            - delay: 0ms
       - automation:
           name: "Addressable 2 (Color Wipe)"
           sequence:
-            lambda: ;
+            - delay: 0ms
       - automation:
           name: "Addressable 3 (Scan)"
           sequence:
-            lambda: ;
+            - delay: 0ms
       - automation:
           name: "Addressable 4 (Twinkle)"
           sequence:
-            lambda: ;
+            - delay: 0ms
       - automation:
           name: "Addressable 5 (Random Twinkle)"
           sequence:
-            lambda: ;
+            - delay: 0ms
       - automation:
           name: "Addressable 6 (Fireworks)"
           sequence:
-            lambda: ;
+            - delay: 0ms
       - automation:
           name: "Addressable 7 (Random Fireworks)"
           sequence:
-            lambda: ;
+            - delay: 0ms
       - automation:
           name: "Fade"
           sequence:
-            lambda: ;
+            - delay: 0ms
       - automation:
           name: "Strobe"
           sequence:
-            lambda: ;
+            - delay: 0ms
       - automation:
           name: "Strobe (RGB)"
           sequence:
-            lambda: ;
+            - delay: 0ms
 
 sensor:
-  - platform: wifi_signal
-    name: ${devicename} WiFi Signal Sensor
-    unit_of_measurement: "%"
-    filters:
-    - lambda: |-
-        if(x <= -100){
-          return  0;
-        } else if (x >= -50) {
-          return 100;
-        } else {
-          return 2 * (x + 100);
-        }
-  - platform: custom
-    lambda: |-
-      auto sensor_1 = new UartReadIntSensor(id(uart_bus));
-      App.register_component(sensor_1);
-      return {sensor_1};
-    sensors:
-      name: ${devicename} ESP-Now errors
-      unit_of_measurement: "failed transmissions"
-      accuracy_decimals: 0
-      icon: mdi:wifi-cancel
+  - platform: esp_now_light
+    uart_id: relay_uart
+    name: "ESP-NOW failed transmissions"

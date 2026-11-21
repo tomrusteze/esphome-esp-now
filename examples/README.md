@@ -1,30 +1,15 @@
 # Examples
-This folder contains useable examples for 2 scenarios. At the very least you will need two esp devices flashed with esphome.
-1. One hub with lights only accessible over esp-now. This is the original scenario that this project was created for. The lights have **NO** direct connection to Wi-Fi or HomeAssistant. It contains two lights but it can easily extend to include more (or only one). This example also includes a power supply that turns off the lights when they are not used. The lights will be presented to HomeAssistant as being part of the hub. 
-It is possible to use a second esp chip to transmit the esp-now signal. You then need to connect this transmitter over serial and flash [1-hub-serial.yaml](1-hub-serial.yaml).
-2. A switch and a light. The switch only has a binary sensor, when pressed, it toggles the light. Both devices are connected to HomeAssistant, but the switch will **ONLY** use esp-now to control the light. The switch currently does not know when the state of the light has changed, so it may not work perfectly.
 
-## Light types
-Different types of lights are supported (RGB(W), monochromatic, binary). You need to select the same light in both nodes. Different types are shown in the following table:
+The examples load the checked-out component from `../components`. To use the examples outside this repository, replace their `external_components` blocks with the [GitHub source declaration](../README.md#install).
 
-| Type          | Sender                          | Receiver                    |
-|---------------|---------------------------------|-----------------------------|
-| Binary        | `esp_now_light()`               | `parseLight()`              |
-| Monochromatic | `esp_now_light_Monochromatic()` | `parseLightMonochromatic()` |
-| RGB           | `esp_now_light_RGB()`           | `parseLightRGB()`           |
-| RGBW          | `esp_now_light_RGBW()`          | `parseLightRGBW_separate()` |
-| RGBWW         | `esp_now_light_RGBWW()`         | `parseLightRGBWW()`         |
+| Setup | Sender | Receiver |
+| --- | --- | --- |
+| Wi-Fi hub with lights off Wi-Fi | [1-hub.yaml](1-hub.yaml) | [1-light.yaml](1-light.yaml) |
+| Hub with a dedicated UART radio | [1-hub-serial.yaml](1-hub-serial.yaml) | [1-light.yaml](1-light.yaml) |
+| Physical switch and a light on Wi-Fi | [2-switch.yaml](2-switch.yaml) | [2-light.yaml](2-light.yaml) |
 
-Keep in mind that addressable lights and non addressable lights have to be handled differently on the receiving side (light). 
-```
-MeshRC::on("#>SETLIGHT1", [](uint8_t* data, uint8_t size) {
-      AddressableLightState* dest = id(light_1);
-      parseLightRGB(data, size, dest);
-    });
-```
-```
-MeshRC::on("#>SETLIGHT1", [](uint8_t* data, uint8_t size) {
-      LightState* dest = id(light_1);
-      parseLightRGB(data, size, dest);
-    });
-```
+Replace the placeholder MAC addresses and Wi-Fi credentials. Set the light board, GPIO pins, and LED type for your hardware. If the receiver uses a fixed channel, match it to the hub's access point or the UART relay. For a single receiver, keep the first hub light. The second hub light targets a second device running the same receiver configuration with its own ESPHome name and MAC address.
+
+The two hub examples include optional relay-controlled power for the lights. Adjust the power supply pin and its inversion for your relay, or remove the `power_supply` block and its references for independently powered lights. The UART setup also needs the [ESP8266 relay sketch](../README.md#uart-relay).
+
+From the repository root, validate a configuration with `esphome config examples/1-hub.yaml` or build it with `esphome compile examples/1-hub.yaml`.
