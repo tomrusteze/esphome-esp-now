@@ -1,5 +1,5 @@
 import esphome.codegen as cg
-from esphome.components import light
+from esphome.components import light as esphome_light
 import esphome.config_validation as cv
 from esphome.const import CONF_ID, CONF_LIGHT_ID
 from esphome.core import HexInt
@@ -64,10 +64,10 @@ def receiver_schema(config):
                     cv.ensure_list(
                         cv.Schema(
                             {
-                                cv.Required(CONF_LIGHT_ID): cv.use_id(light.LightState),
+                                cv.Required(CONF_LIGHT_ID): cv.use_id(esphome_light.LightState),
                                 cv.Optional(CONF_LIGHT_NUMBER, default=1): cv.int_range(min=1, max=9),
                                 cv.Required(CONF_LIGHT_TYPE): cv.enum(LIGHT_TYPES, lower=True),
-                                cv.Optional(CONF_WHITE_LIGHT_ID): cv.use_id(light.LightState),
+                                cv.Optional(CONF_WHITE_LIGHT_ID): cv.use_id(esphome_light.LightState),
                             }
                         )
                     ),
